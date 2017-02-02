@@ -1,0 +1,16 @@
+apply plugin: 'java'
+apply plugin: 'application'
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+    compile 'io.reactivex:rxnetty-http:0.5.2-rc.5'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.8.2'
+}
+
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+
+mainClassName = "com.gradle.cloudservices.enterprise.export.BuildCountByUser"

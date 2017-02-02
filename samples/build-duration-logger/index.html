@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Gradle Enterprise Export API Samples: Build duration logger</title>
+</head>
+
+<body>
+<script>
+    const gradleEnterpriseServer = 'https://gradle.my-company.com'; // replace with your Gradle Enterprise base url
+    const buildStreamUrl = `${gradleEnterpriseServer}/build-export/v1/builds/since/now?stream`;
+    const buildStream = new EventSource(buildStreamUrl);
+    const buildEventStreamUrl = buildId => `${gradleEnterpriseServer}/build-export/v1/build/${buildId}/events`;
+
+    buildStream.onopen = event => console.log(`Build stream '${buildStreamUrl}' open`);
+    buildStream.onerror = event => console.error('Build stream error', event);
+    buildStream.addEventListener('Build', event => {
+        const buildPayload = JSON.parse(event.data);
+        const buildEventStream = new EventSource(buildEventStreamUrl(buildPayload.buildId));
+
+        let startTime;
+
+        buildEventStream.addEventListener('BuildEvent', event => {
+            const buildEventPayload = JSON.parse(event.data);
+            const eventType = buildEventPayload.type.eventType;
+
+            if (eventType == 'BuildStarted') {
+                startTime = buildEventPayload.timestamp;
+            } else if (eventType == 'BuildFinished') {
+                const endTime = buildEventPayload.timestamp;
+
+                console.log(`Build ${buildPayload.buildId} completed in ${endTime - startTime}ms`);
+
+                buildEventStream.close();
+            }
+        });
+    });
+</script>
+</body>
+
+</html>

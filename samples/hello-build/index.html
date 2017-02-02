@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Gradle Enterprise Export API Samples: Hello build!</title>
+</head>
+
+<body>
+<script>
+    const gradleEnterpriseServer = 'https://gradle.my-company.com'; // replace with your Gradle Enterprise base url
+    const buildStreamUrl = `${gradleEnterpriseServer}/build-export/v1/builds/since/now?stream`;
+    const buildStream = new EventSource(buildStreamUrl);
+
+    buildStream.onopen = event => console.log(`Build stream '${buildStreamUrl}' open`);
+    buildStream.onerror = event => console.error('Build stream error', event);
+    buildStream.addEventListener('Build', event => {
+        const payload = JSON.parse(event.data);
+
+        console.log(`Hello build ${payload.buildId}!`);
+    });
+</script>
+</body>
+
+</html>
