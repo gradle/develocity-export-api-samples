@@ -2,8 +2,11 @@ package com.gradle.cloudservices.enterprise.export;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableSet;
 import io.netty.buffer.ByteBuf;
 import io.reactivex.netty.protocol.http.client.HttpClient;
+import io.reactivex.netty.protocol.http.client.HttpClientRequest;
 import io.reactivex.netty.protocol.http.client.HttpClientResponse;
 import io.reactivex.netty.protocol.http.sse.ServerSentEvent;
 import rx.Observable;
@@ -14,6 +17,8 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static java.time.Instant.now;
 
@@ -22,7 +27,7 @@ public final class BuildCountByUser {
     private static final SocketAddress GRADLE_ENTERPRISE_SERVER = new InetSocketAddress("gradle.my-company.com", 443);
 
     private static final HttpClient<ByteBuf, ByteBuf> HTTP_CLIENT = HttpClient.newClient(GRADLE_ENTERPRISE_SERVER).unsafeSecure();
-    private static final int THROTTLE = 5;
+    private static final int THROTTLE = 30;
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     public static void main(String[] args) throws Exception {
@@ -32,11 +37,11 @@ public final class BuildCountByUser {
             .doOnSubscribe(() -> System.out.println("Streaming builds..."))
             .map(BuildCountByUser::parse)
             .map(json -> json.get("buildId").asText())
-            .flatMap(buildId -> buildEventStream(buildId)
+            .flatMap(buildId -> buildEventStream(buildId, ImmutableSet.of("BuildAgent"))
                 .doOnSubscribe(() -> System.out.println("Streaming events for : " + buildId))
                 .filter(serverSentEvent -> serverSentEvent.getEventTypeAsString().equals("BuildEvent"))
                 .map(BuildCountByUser::parse)
-                .first(json -> json.get("type").get("eventType").asText().equals("BuildAgent"))
+                .single()
                 .map(json -> json.get("data").get("username").asText()),
                 THROTTLE
             )
@@ -49,15 +54,38 @@ public final class BuildCountByUser {
     }
 
     private static Observable<ServerSentEvent> buildStream(Instant since) {
-        return HTTP_CLIENT
-            .createGet("/build-export/v1/builds/since/" + String.valueOf(since.toEpochMilli()))
-            .flatMap(HttpClientResponse::getContentAsServerSentEvents);
+        return resume("/build-export/v1/builds/since/" + String.valueOf(since.toEpochMilli()), null);
     }
 
-    private static Observable<ServerSentEvent> buildEventStream(String buildId) {
-        return HTTP_CLIENT
-            .createGet("/build-export/v1/build/" + buildId + "/events")
-            .flatMap(HttpClientResponse::getContentAsServerSentEvents);
+
+    private static Observable<ServerSentEvent> buildEventStream(String buildId, Set<String> eventTypes) {
+        return resume("/build-export/v1/build/" + buildId + "/events?eventTypes=" + Joiner.on(",").join(eventTypes), null);
+    }
+
+    private static Observable<ServerSentEvent> resume(String url, String lastEventId) {
+        AtomicReference<String> eventId = new AtomicReference<>();
+
+        HttpClientRequest<ByteBuf, ByteBuf> request = HTTP_CLIENT
+            .createGet(url);
+
+        if (lastEventId != null) {
+            request = request.addHeader("Last-Event-ID", lastEventId);
+        }
+
+        return request
+            .flatMap(HttpClientResponse::getContentAsServerSentEvents)
+            .doOnNext(serverSentEvent -> eventId.set(serverSentEvent.getEventIdAsString()))
+            .onErrorResumeNext(t -> {
+
+                if (eventId.get() != null) {
+                    System.out.println("Error streaming " + url + ", resuming from " + eventId.get() + "...");
+                    return resume(url, eventId.get());
+                } else {
+                    System.out.println("Error streaming " + url + ", resuming from null ...");
+                    return resume(url, null);
+                }
+
+            });
     }
 
     private static JsonNode parse(ServerSentEvent serverSentEvent) {

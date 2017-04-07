@@ -21,8 +21,8 @@ function buildStreamUrl(gradleEnterpriseServer) {
     return `${gradleEnterpriseServer}/build-export/v1/builds/since/now?stream`;
 }
 
-function buildEventStreamUrl(gradleEnterpriseServer, buildId) {
-    return `${gradleEnterpriseServer}/build-export/v1/build/${buildId}/events`
+function buildEventStreamUrl(gradleEnterpriseServer, buildId, eventTypes) {
+    return `${gradleEnterpriseServer}/build-export/v1/build/${buildId}/events?eventTypes=${eventTypes}`
 }
 
 function _initializeBuildSuccessChart(chart) {

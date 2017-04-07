@@ -10,7 +10,7 @@
     const gradleEnterpriseServer = 'https://gradle.my-company.com'; // replace with your Gradle Enterprise base url
     const buildStreamUrl = `${gradleEnterpriseServer}/build-export/v1/builds/since/now?stream`;
     const buildStream = new EventSource(buildStreamUrl);
-    const buildEventStreamUrl = buildId => `${gradleEnterpriseServer}/build-export/v1/build/${buildId}/events`;
+    const buildEventStreamUrl = buildId => `${gradleEnterpriseServer}/build-export/v1/build/${buildId}/events?eventTypes=BuildStarted,BuildFinished`;
 
     buildStream.onopen = event => console.log(`Build stream '${buildStreamUrl}' open`);
     buildStream.onerror = event => console.error('Build stream error', event);
@@ -30,8 +30,6 @@
                 const endTime = buildEventPayload.timestamp;
 
                 console.log(`Build ${buildPayload.buildId} completed in ${endTime - startTime}ms`);
-
-                buildEventStream.close();
             }
         });
     });

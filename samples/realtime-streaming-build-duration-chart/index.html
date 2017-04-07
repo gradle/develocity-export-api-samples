@@ -21,7 +21,7 @@
 
             buildStream.addEventListener('Build', event => {
                 const buildPayload = JSON.parse(event.data);
-                const buildEventStream = new EventSource(buildEventStreamUrl(gradleEnterpriseServer, buildPayload.buildId));
+                const buildEventStream = new EventSource(buildEventStreamUrl(gradleEnterpriseServer, buildPayload.buildId, 'BuildStarted,BuildFinished'));
                 const buildEventBus = $({});
 
                 let startTime;
@@ -29,10 +29,6 @@
                 buildEventStream.addEventListener('BuildEvent', event => {
                     const buildEventPayload = JSON.parse(event.data);
                     const eventType = buildEventPayload.type.eventType;
-
-                    if (eventType == 'BuildFinished') {
-                        buildEventStream.close();
-                    }
 
                     buildEventBus.trigger(eventType, [buildEventPayload]);
                 });

@@ -6,8 +6,9 @@ repositories {
 }
 
 dependencies {
-    compile 'io.reactivex:rxnetty-http:0.5.2-rc.5'
+    compile 'io.reactivex:rxnetty-http:0.5.2'
     compile 'com.fasterxml.jackson.core:jackson-databind:2.8.2'
+    compile 'com.google.guava:guava:21.0'
 }
 
 sourceCompatibility = '1.8'
