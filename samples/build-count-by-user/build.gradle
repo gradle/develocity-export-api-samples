@@ -1,5 +1,16 @@
-apply plugin: 'java'
-apply plugin: 'application'
+plugins {
+    id 'com.gradle.build-scan' version '1.9'
+    id 'java'
+    id 'application'
+}
+
+buildScan {
+// Uncomment the lines below to agree to the Terms of Service.
+// licenseAgreementUrl = 'https://gradle.com/terms-of-service'
+// licenseAgree = 'yes'
+    tag 'SAMPLE'
+    link 'GitHub', 'https://github.com/gradle/gradle-build-scan-quickstart'
+}
 
 repositories {
     jcenter()
