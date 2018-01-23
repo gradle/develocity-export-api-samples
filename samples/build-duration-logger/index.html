@@ -7,9 +7,7 @@
 
 <body>
 <script>
-    const gradleEnterpriseServerUrl = 'https://gradle.my-company.com'; // replace with your Gradle Enterprise base url
-    const buildStreamUrl = `${gradleEnterpriseServerUrl}/build-export/v1/builds/since/now?stream`;
-    const buildStream = new EventSource(buildStreamUrl);
+    const GRADLE_ENTERPRISE_SERVER_URL = 'https://gradle.my-company.com'; // replace with your Gradle Enterprise base url
 
     class BuildDurationProcessor {
 
@@ -30,6 +28,10 @@
                 this.processBuild(this.pendingBuildIds.shift());
                 setTimeout(() => this.processPendingBuilds(), 0);
             }
+        }
+
+        createBuildStreamUrl(startTime = 'now') {
+            return `${this.gradleEnterpriseServerUrl}/build-export/v1/builds/since/${startTime}?stream`;
         }
 
         createBuildDurationEventStreamUrl(buildId) {
@@ -58,7 +60,9 @@
         }
     };
 
-    const buildDurationProcessor = new BuildDurationProcessor(gradleEnterpriseServerUrl);
+    const buildDurationProcessor = new BuildDurationProcessor(GRADLE_ENTERPRISE_SERVER_URL);
+    const buildStreamUrl = buildDurationProcessor.createBuildStreamUrl();
+    const buildStream = new EventSource(buildStreamUrl);
 
     buildStream.onopen = event => console.log(`Build stream '${buildStreamUrl}' open`);
     buildStream.onerror = event => console.error('Build stream error', event);
