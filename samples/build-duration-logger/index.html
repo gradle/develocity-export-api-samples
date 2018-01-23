@@ -53,6 +53,8 @@
                     const endTime = buildEventPayload.timestamp;
 
                     console.log(`Build ${buildId} completed in ${endTime - startTime}ms`);
+                    buildDurationEventStream.close();
+
                     this.numBuildsInProcess--;
                     setTimeout(() => this.processPendingBuilds(), 0);
                 }
