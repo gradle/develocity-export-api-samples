@@ -13,8 +13,8 @@
 
     class BuildDurationProcessor {
 
-        constructor(gradleEnterpriseServer, maxConcurrentBuildsToProcess = 6) {
-            this.gradleEnterpriseServer = gradleEnterpriseServer;
+        constructor(gradleEnterpriseServerUrl, maxConcurrentBuildsToProcess = 6) {
+            this.gradleEnterpriseServerUrl = gradleEnterpriseServerUrl;
             this.pendingBuildIds = [];
             this.numBuildsInProcess = 0;
             this.maxConcurrentBuildsToProcess = maxConcurrentBuildsToProcess;
@@ -33,7 +33,7 @@
         }
 
         createBuildDurationEventStreamUrl(buildId) {
-            return `${this.gradleEnterpriseServer}/build-export/v1/build/${buildId}/events?eventTypes=BuildStarted,BuildFinished`;
+            return `${this.gradleEnterpriseServerUrl}/build-export/v1/build/${buildId}/events?eventTypes=BuildStarted,BuildFinished`;
         }
 
         processBuild(buildId) {
