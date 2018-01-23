@@ -7,42 +7,42 @@
 
 <body>
 <script>
-    const gradleEnterpriseServer = 'https://gradle.my-company.com'; // replace with your Gradle Enterprise base url
-    const buildStreamUrl = `${gradleEnterpriseServer}/build-export/v1/builds/since/now?stream`;
+    const gradleEnterpriseServerUrl = 'https://gradle.my-company.com'; // replace with your Gradle Enterprise base url
+    const buildStreamUrl = `${gradleEnterpriseServerUrl}/build-export/v1/builds/since/now?stream`;
     const buildStream = new EventSource(buildStreamUrl);
 
-    class BuildProcessor {
+    class BuildDurationProcessor {
 
-        constructor(gradleEnterpriseServer, maxConcurrentBuildsToProcess) {
+        constructor(gradleEnterpriseServer, maxConcurrentBuildsToProcess = 6) {
             this.gradleEnterpriseServer = gradleEnterpriseServer;
-            this.buildIds = [];
+            this.pendingBuildIds = [];
             this.numBuildsInProcess = 0;
             this.maxConcurrentBuildsToProcess = maxConcurrentBuildsToProcess;
         }
 
         enqueue(buildId) {
-            this.buildIds.push(buildId);
-            this.processQueuedBuilds();
+            this.pendingBuildIds.push(buildId);
+            this.processPendingBuilds();
         }
 
-        processQueuedBuilds() {
-            if (this.buildIds.length > 0 && this.numBuildsInProcess < this.maxConcurrentBuildsToProcess) {
-                this.processBuild(this.buildIds.shift());
-                setTimeout(this.processQueuedBuilds.bind(this), 0);
+        processPendingBuilds() {
+            if (this.pendingBuildIds.length > 0 && this.numBuildsInProcess < this.maxConcurrentBuildsToProcess) {
+                this.processBuild(this.pendingBuildIds.shift());
+                setTimeout(() => this.processPendingBuilds(), 0);
             }
         }
 
-        buildEventStreamUrl(buildId) {
+        createBuildDurationEventStreamUrl(buildId) {
             return `${this.gradleEnterpriseServer}/build-export/v1/build/${buildId}/events?eventTypes=BuildStarted,BuildFinished`;
         }
 
         processBuild(buildId) {
             this.numBuildsInProcess++;
-            const buildEventStream = new EventSource(this.buildEventStreamUrl(buildId));
+            const buildDurationEventStream = new EventSource(this.createBuildDurationEventStreamUrl(buildId));
 
             let startTime;
 
-            buildEventStream.addEventListener('BuildEvent', event => {
+            buildDurationEventStream.addEventListener('BuildEvent', event => {
                 const buildEventPayload = JSON.parse(event.data);
                 const eventType = buildEventPayload.type.eventType;
 
@@ -58,15 +58,14 @@
         }
     };
 
-    const maxConcurrentBuildsToProcess = 6;
-    const buildProcessor = new BuildProcessor(gradleEnterpriseServer, maxConcurrentBuildsToProcess);
+    const buildDurationProcessor = new BuildDurationProcessor(gradleEnterpriseServerUrl);
 
     buildStream.onopen = event => console.log(`Build stream '${buildStreamUrl}' open`);
     buildStream.onerror = event => console.error('Build stream error', event);
     buildStream.addEventListener('Build', event => {
         const buildPayload = JSON.parse(event.data);
 
-        buildProcessor.enqueue(buildPayload.buildId);
+        buildDurationProcessor.enqueue(buildPayload.buildId);
     });
 </script>
 </body>
