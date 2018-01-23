@@ -26,7 +26,6 @@
         processPendingBuilds() {
             if (this.pendingBuildIds.length > 0 && this.numBuildsInProcess < this.maxConcurrentBuildsToProcess) {
                 this.processBuild(this.pendingBuildIds.shift());
-                setTimeout(() => this.processPendingBuilds(), 0);
             }
         }
 
@@ -55,6 +54,7 @@
 
                     console.log(`Build ${buildId} completed in ${endTime - startTime}ms`);
                     this.numBuildsInProcess--;
+                    setTimeout(() => this.processPendingBuilds(), 0);
                 }
             });
         }
