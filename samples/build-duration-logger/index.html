@@ -2,20 +2,35 @@
 <html>
 
 <head>
-    <title>Gradle Enterprise Export API Samples: Build duration logger</title>
+    <title>Gradle Enterprise Export API Samples: Build duration and cacheable task count loggers</title>
 </head>
 
 <body>
 <script>
-    const GRADLE_ENTERPRISE_SERVER_URL = 'https://gradle.my-company.com'; // replace with your Gradle Enterprise base url
-
-    class BuildDurationProcessor {
-
-        constructor(gradleEnterpriseServerUrl, maxConcurrentBuildsToProcess = 6) {
+    // Begin build processing code to make it easier for you to consume events from the export API
+    // You can ignore this code - the parts for you to customize / modify are marked down below.
+    class BuildProcessor {
+        constructor(gradleEnterpriseServerUrl, maxConcurrentBuildsToProcess, eventHandlerClasses) {
             this.gradleEnterpriseServerUrl = gradleEnterpriseServerUrl;
+            this.eventHandlerClasses = eventHandlerClasses;
+            this.allHandledEventTypes = this.getAllHandledEventTypes();
+            this.handledEventTypesCommaString = [...this.allHandledEventTypes].join(',');
             this.pendingBuildIds = [];
             this.numBuildsInProcess = 0;
             this.maxConcurrentBuildsToProcess = maxConcurrentBuildsToProcess;
+        }
+
+        start(startTime) {
+            const buildStreamUrl = this.createBuildStreamUrl(startTime);
+            const buildStream = new EventSource(buildStreamUrl);
+
+            buildStream.onopen = event => console.log(`Build stream '${buildStreamUrl}' open`);
+            buildStream.onerror = event => console.error('Build stream error', event);
+            buildStream.addEventListener('Build', event => {
+                const { buildId } = JSON.parse(event.data);
+
+                this.enqueue(buildId);
+            });
         }
 
         enqueue(buildId) {
@@ -29,50 +44,128 @@
             }
         }
 
-        createBuildStreamUrl(startTime = 'now') {
+        createBuildStreamUrl(startTime) {
             return `${this.gradleEnterpriseServerUrl}/build-export/v1/builds/since/${startTime}?stream`;
         }
 
-        createBuildDurationEventStreamUrl(buildId) {
-            return `${this.gradleEnterpriseServerUrl}/build-export/v1/build/${buildId}/events?eventTypes=BuildStarted,BuildFinished`;
+        // Inspect the methods on the handler class to find any event handlers that start with 'on' followed by the event type like 'onBuildStarted'.
+        // Then take the part of the method name after the 'on' to get the event type.
+        getHandledEventTypesForHandlerClass(handlerClass) {
+            return Object.getOwnPropertyNames(handlerClass.prototype).filter(methodName => methodName.startsWith('on')).map(methodName => methodName.substring(2));
+        }
+
+        getAllHandledEventTypes() {
+            return new Set(this.eventHandlerClasses.reduce((eventTypes, handlerClass) => eventTypes.concat(this.getHandledEventTypesForHandlerClass(handlerClass)), []));
+        }
+
+        createBuildEventStreamUrl(buildId) {
+            return `${this.gradleEnterpriseServerUrl}/build-export/v1/build/${buildId}/events?eventTypes=${this.handledEventTypesCommaString}`;
+        }
+
+        // Creates a map of event type -> handler instance for each event type supported by one or more handlers.
+        createBuildEventHandlers(buildId) {
+            return this.eventHandlerClasses.reduce((handlers, handlerClass) => {
+                const addHandler = (type, handler) => handlers[type] ? handlers[type].push(handler) : handlers[type] = [handler];
+
+                const handler = new handlerClass.prototype.constructor(buildId);
+
+                this.getHandledEventTypesForHandlerClass(handlerClass).forEach(eventType => addHandler(eventType, handler));
+
+                if (Object.getOwnPropertyNames(handlerClass.prototype).includes('complete')) {
+                    addHandler('complete', handler);
+                }
+
+                return handlers;
+            }, {});
         }
 
         processBuild(buildId) {
             this.numBuildsInProcess++;
-            const buildDurationEventStream = new EventSource(this.createBuildDurationEventStreamUrl(buildId));
+            const buildEventHandlers = this.createBuildEventHandlers(buildId);
+            const buildEventStream = new EventSource(this.createBuildEventStreamUrl(buildId));
+            let buildEventStreamOpen = true;
 
-            let startTime;
-
-            buildDurationEventStream.addEventListener('BuildEvent', event => {
+            buildEventStream.addEventListener('BuildEvent', event => {
                 const buildEventPayload = JSON.parse(event.data);
-                const eventType = buildEventPayload.type.eventType;
+                const { eventType } = buildEventPayload.type;
 
-                if (eventType == 'BuildStarted') {
-                    startTime = buildEventPayload.timestamp;
-                } else if (eventType == 'BuildFinished') {
-                    const endTime = buildEventPayload.timestamp;
-
-                    console.log(`Build ${buildId} completed in ${endTime - startTime}ms`);
-                    buildDurationEventStream.close();
-
-                    this.numBuildsInProcess--;
-                    setTimeout(() => this.processPendingBuilds(), 0);
+                if (this.allHandledEventTypes.has(eventType)) {
+                    buildEventHandlers[eventType].forEach(handler => handler[`on${eventType}`](buildEventPayload));
                 }
             });
+
+            // there isn't an onclose event that we can listen to, but an error event does get triggered
+            // when the end of the stream is reached so use that as a rough proxy for the end of the stream
+            buildEventStream.onerror = event => {
+                if (buildEventStreamOpen) {
+                    this.finishedProcessingBuild();
+
+                    // Call the 'complete()' method on any handler that has it.
+                    if (buildEventHandlers.complete) {
+                        buildEventHandlers.complete.forEach(handler => handler.complete());
+                    }
+
+                    buildEventStream.close();
+                    buildEventStreamOpen = false;
+                }
+            }
         }
-    };
 
-    const buildDurationProcessor = new BuildDurationProcessor(GRADLE_ENTERPRISE_SERVER_URL);
-    const buildStreamUrl = buildDurationProcessor.createBuildStreamUrl();
-    const buildStream = new EventSource(buildStreamUrl);
+        finishedProcessingBuild() {
+            this.numBuildsInProcess--;
+            setTimeout(() => this.processPendingBuilds(), 0); // process the next set of pending builds, if any
+        }
+    }; // End build processing library
 
-    buildStream.onopen = event => console.log(`Build stream '${buildStreamUrl}' open`);
-    buildStream.onerror = event => console.error('Build stream error', event);
-    buildStream.addEventListener('Build', event => {
-        const buildPayload = JSON.parse(event.data);
+    // Begin user-modifiable code
 
-        buildDurationProcessor.enqueue(buildPayload.buildId);
-    });
+    // Example of a build event handler class that calculates and logs the build duration.
+    // You can hook into any build event by creating a class like this one that has a constructor takes the build ID
+    // and 'on'EventType methods that will get called when that event type is received.
+    // For example, the 'onBuildStarted' event will get called with the BuildStarted event as the parameter when that
+    // event is processed from the build event stream.
+    class BuildDurationEventsHandler {
+        constructor(buildId) { // pass in full build data
+            this.buildId = buildId;
+        }
+
+        onBuildStarted(eventPayload) {
+            this.startTime = eventPayload.timestamp;
+        }
+
+        onBuildFinished(eventPayload) {
+            const endTime = eventPayload.timestamp;
+
+            console.log(`Build ${this.buildId} completed in ${endTime - this.startTime}ms`);
+        }
+    }
+
+    // This example listens to the TaskFinished event to check to see how many tasks in the build were cacheable.
+    // It makes use of the 'complete' method that will get called when processing that build's events is finished.
+    class CacheableTaskCountHandler {
+        constructor(buildId) {
+            this.buildId = buildId;
+            this.cacheableTaskCount = 0;
+        }
+
+        onTaskFinished(eventPayload) {
+            if (eventPayload.data.cacheable) {
+                this.cacheableTaskCount++;
+            }
+        }
+
+        complete() {
+            console.log(`Build ${this.buildId} had ${this.cacheableTaskCount} cacheable tasks`)
+        }
+    }
+
+    const GRADLE_ENTERPRISE_SERVER_URL = 'https://gradle.my-company.com'; // replace with your Gradle Enterprise base url
+    const MAX_CONCURRENT_BUILDS_TO_PROCESS = 6;
+    const BUILD_EVENT_HANDLERS = [BuildDurationEventsHandler, CacheableTaskCountHandler]; // a list of one or more build event handler classes
+
+    const buildProcessor = new BuildProcessor(GRADLE_ENTERPRISE_SERVER_URL, MAX_CONCURRENT_BUILDS_TO_PROCESS, BUILD_EVENT_HANDLERS);
+    const processBuildsStartingFrom = 'now';
+    buildProcessor.start(processBuildsStartingFrom);
 </script>
 </body>
 
