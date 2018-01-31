@@ -7,15 +7,71 @@
 
 <body>
 <script>
-    // Begin build processing code to make it easier for you to consume events from the export API
-    // You can ignore this code - the parts for you to customize / modify are marked down below.
+    // The address of your Gradle Enterprise server
+    const GRADLE_ENTERPRISE_SERVER_URL = 'https://gradle.my-company.com'; 
+    
+    // The point in time from which builds should be processed.
+    // Values can be 'now', or a number of milliseconds since the UNIX epoch.
+    // The time is the point in time that the build was published to the server.
+    const PROCESS_FROM = 'now';
+
+    // How many builds to process at one time.
+    // If running with very fast network connection to the server, 
+    // this number can be increased for better throughput.
+    const MAX_CONCURRENT_BUILDS_TO_PROCESS = 6;    
+
+    // A build event handler that calculates and logs the build duration.
+    //
+    // Each "on" method is an event handler that receives each instance of that type of event.
+    // Please see https://docs.gradle.com/enterprise/export-api for more information about the event types.
+    // 
+    // After all events have been received, the "complete()" method will be called if it exsits.
+    class BuildDurationEventsHandler {
+        constructor(build) {
+            this.buildId = build.buildId;
+        }
+
+        onBuildStarted(eventPayload) {
+            this.startTime = eventPayload.timestamp;
+        }
+
+        onBuildFinished(eventPayload) {
+            const endTime = eventPayload.timestamp;
+            console.log(`Build ${this.buildId} completed in ${endTime - this.startTime}ms`);
+        }
+    }
+
+    // A build event handler that counts how many tasks of the build were cacheable.
+    class CacheableTaskCountHandler {
+        constructor(build) {
+            this.buildId = build.buildId;
+            this.cacheableTaskCount = 0;
+        }
+
+        onTaskFinished(eventPayload) {
+            if (eventPayload.data.cacheable) {
+                this.cacheableTaskCount++;
+            }
+        }
+
+        complete() {
+            console.log(`Build ${this.buildId} had ${this.cacheableTaskCount} cacheable tasks`)
+        }
+    }
+    
+    // The event handlers to use to process builds.
+    const BUILD_EVENT_HANDLERS = [BuildDurationEventsHandler, CacheableTaskCountHandler]; 
+    
+    
+    // Code below is a generic utility for interacting with the Export API.
+    
     class BuildProcessor {
         constructor(gradleEnterpriseServerUrl, maxConcurrentBuildsToProcess, eventHandlerClasses) {
             this.gradleEnterpriseServerUrl = gradleEnterpriseServerUrl;
             this.eventHandlerClasses = eventHandlerClasses;
             this.allHandledEventTypes = this.getAllHandledEventTypes();
-            this.handledEventTypesCommaString = [...this.allHandledEventTypes].join(',');
-            this.pendingBuildIds = [];
+            
+            this.pendingBuilds = [];
             this.numBuildsInProcess = 0;
             this.maxConcurrentBuildsToProcess = maxConcurrentBuildsToProcess;
         }
@@ -27,20 +83,18 @@
             buildStream.onopen = event => console.log(`Build stream '${buildStreamUrl}' open`);
             buildStream.onerror = event => console.error('Build stream error', event);
             buildStream.addEventListener('Build', event => {
-                const { buildId } = JSON.parse(event.data);
-
-                this.enqueue(buildId);
+                this.enqueue(JSON.parse(event.data));
             });
         }
 
-        enqueue(buildId) {
-            this.pendingBuildIds.push(buildId);
+        enqueue(build) {
+            this.pendingBuilds.push(build);
             this.processPendingBuilds();
         }
 
         processPendingBuilds() {
-            if (this.pendingBuildIds.length > 0 && this.numBuildsInProcess < this.maxConcurrentBuildsToProcess) {
-                this.processBuild(this.pendingBuildIds.shift());
+            if (this.pendingBuilds.length > 0 && this.numBuildsInProcess < this.maxConcurrentBuildsToProcess) {
+                this.processBuild(this.pendingBuilds.shift());
             }
         }
 
@@ -51,7 +105,9 @@
         // Inspect the methods on the handler class to find any event handlers that start with 'on' followed by the event type like 'onBuildStarted'.
         // Then take the part of the method name after the 'on' to get the event type.
         getHandledEventTypesForHandlerClass(handlerClass) {
-            return Object.getOwnPropertyNames(handlerClass.prototype).filter(methodName => methodName.startsWith('on')).map(methodName => methodName.substring(2));
+            return Object.getOwnPropertyNames(handlerClass.prototype)
+              .filter(methodName => methodName.startsWith('on'))
+              .map(methodName => methodName.substring(2));
         }
 
         getAllHandledEventTypes() {
@@ -59,15 +115,16 @@
         }
 
         createBuildEventStreamUrl(buildId) {
-            return `${this.gradleEnterpriseServerUrl}/build-export/v1/build/${buildId}/events?eventTypes=${this.handledEventTypesCommaString}`;
+            const types = [...this.allHandledEventTypes].join(',');
+            return `${this.gradleEnterpriseServerUrl}/build-export/v1/build/${buildId}/events?eventTypes=${types}`;
         }
 
         // Creates a map of event type -> handler instance for each event type supported by one or more handlers.
-        createBuildEventHandlers(buildId) {
+        createBuildEventHandlers(build) {
             return this.eventHandlerClasses.reduce((handlers, handlerClass) => {
                 const addHandler = (type, handler) => handlers[type] ? handlers[type].push(handler) : handlers[type] = [handler];
 
-                const handler = new handlerClass.prototype.constructor(buildId);
+                const handler = new handlerClass.prototype.constructor(build);
 
                 this.getHandledEventTypesForHandlerClass(handlerClass).forEach(eventType => addHandler(eventType, handler));
 
@@ -79,10 +136,10 @@
             }, {});
         }
 
-        processBuild(buildId) {
+        processBuild(build) {
             this.numBuildsInProcess++;
-            const buildEventHandlers = this.createBuildEventHandlers(buildId);
-            const buildEventStream = new EventSource(this.createBuildEventStreamUrl(buildId));
+            const buildEventHandlers = this.createBuildEventHandlers(build);
+            const buildEventStream = new EventSource(this.createBuildEventStreamUrl(build.buildId));
             let buildEventStreamOpen = true;
 
             buildEventStream.addEventListener('BuildEvent', event => {
@@ -115,57 +172,14 @@
             this.numBuildsInProcess--;
             setTimeout(() => this.processPendingBuilds(), 0); // process the next set of pending builds, if any
         }
-    }; // End build processing library
-
-    // Begin user-modifiable code
-
-    // Example of a build event handler class that calculates and logs the build duration.
-    // You can hook into any build event by creating a class like this one that has a constructor takes the build ID
-    // and 'on'EventType methods that will get called when that event type is received.
-    // For example, the 'onBuildStarted' event will get called with the BuildStarted event as the parameter when that
-    // event is processed from the build event stream.
-    class BuildDurationEventsHandler {
-        constructor(buildId) { // pass in full build data
-            this.buildId = buildId;
-        }
-
-        onBuildStarted(eventPayload) {
-            this.startTime = eventPayload.timestamp;
-        }
-
-        onBuildFinished(eventPayload) {
-            const endTime = eventPayload.timestamp;
-
-            console.log(`Build ${this.buildId} completed in ${endTime - this.startTime}ms`);
-        }
-    }
-
-    // This example listens to the TaskFinished event to check to see how many tasks in the build were cacheable.
-    // It makes use of the 'complete' method that will get called when processing that build's events is finished.
-    class CacheableTaskCountHandler {
-        constructor(buildId) {
-            this.buildId = buildId;
-            this.cacheableTaskCount = 0;
-        }
-
-        onTaskFinished(eventPayload) {
-            if (eventPayload.data.cacheable) {
-                this.cacheableTaskCount++;
-            }
-        }
-
-        complete() {
-            console.log(`Build ${this.buildId} had ${this.cacheableTaskCount} cacheable tasks`)
-        }
-    }
-
-    const GRADLE_ENTERPRISE_SERVER_URL = 'https://gradle.my-company.com'; // replace with your Gradle Enterprise base url
-    const MAX_CONCURRENT_BUILDS_TO_PROCESS = 6;
-    const BUILD_EVENT_HANDLERS = [BuildDurationEventsHandler, CacheableTaskCountHandler]; // a list of one or more build event handler classes
-
-    const buildProcessor = new BuildProcessor(GRADLE_ENTERPRISE_SERVER_URL, MAX_CONCURRENT_BUILDS_TO_PROCESS, BUILD_EVENT_HANDLERS);
-    const processBuildsStartingFrom = 'now';
-    buildProcessor.start(processBuildsStartingFrom);
+    }; 
+        
+    new BuildProcessor(
+      GRADLE_ENTERPRISE_SERVER_URL, 
+      MAX_CONCURRENT_BUILDS_TO_PROCESS, 
+      BUILD_EVENT_HANDLERS
+    ).start(PROCESS_FROM);
+    
 </script>
 </body>
 
