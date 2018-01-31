@@ -21,7 +21,7 @@ Navigate to the `README.md` file in each sub directory in the [`samples`][sample
 
 Read the [Gradle Enterprise Export API manual][manual] to learn more about the export API.
 
-Visit the website to learn more about [Gradle Enterprise][gradle-enterprise] and [Gradle Cloud Services][gradle-cloud-services].
+Visit the website to learn more about [Gradle Enterprise][gradle-enterprise].
 
 [samples]: samples
 [hello-build]: samples/hello-build
@@ -30,4 +30,3 @@ Visit the website to learn more about [Gradle Enterprise][gradle-enterprise] and
 [realtime-streaming-build-duration-chart]: samples/realtime-streaming-build-duration-chart
 [manual]: https://docs.gradle.com/enterprise/export-api
 [gradle-enterprise]: https://gradle.com/enterprise
-[gradle-cloud-services]: https://gradle.com
