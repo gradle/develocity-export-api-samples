@@ -17,11 +17,11 @@
             initializeCharts('#buildSuccessChart', '#buildDurationChart');
 
             const gradleEnterpriseServer = 'https://gradle.my-company.com'; // replace with your Gradle Enterprise base url
-            const buildStream = new EventSource(buildStreamUrl(gradleEnterpriseServer));
+            const buildStream = new EventSource(buildStreamUrl(gradleEnterpriseServer), { withCredentials: true });
 
             buildStream.addEventListener('Build', event => {
                 const buildPayload = JSON.parse(event.data);
-                const buildEventStream = new EventSource(buildEventStreamUrl(gradleEnterpriseServer, buildPayload.buildId, 'BuildStarted,BuildFinished'));
+                const buildEventStream = new EventSource(buildEventStreamUrl(gradleEnterpriseServer, buildPayload.buildId, 'BuildStarted,BuildFinished'), { withCredentials: true });
                 const buildEventBus = $({});
 
                 let startTime;
