@@ -46,7 +46,7 @@ function _initializeBuildDurationChart(chart) {
     buildDurationPlot = $.plot(chart, [], {
         series: {shadowSize: 0, points: {show: true, radius: 3, lineWidth: 0}, lines: {show: false}},
         axisLabels: {show: true},
-        yaxis: {min: 0, max: 10000, axisLabel: 'Build duration (ms)', axisLabelPadding: 15},
+        yaxis: {min: 0, axisLabel: 'Build duration (seconds)', axisLabelPadding: 25},
         xaxis: {mode: 'time', timezone: 'browser', timeformat: '%H:%M'}
     });
 }
@@ -64,7 +64,7 @@ function _updateBuildSuccessChart(success) {
 }
 
 function _updateBuildDurationChart(startTime, endTime, success) {
-    const dataPoint = [endTime, endTime - startTime];
+    const dataPoint = [endTime, (endTime - startTime)/1000];
 
     if (success) {
         buildDurationDataSuccess.push(dataPoint);
