@@ -15,7 +15,8 @@ The chart is created with the fantastic [Flot][flot] library.
 To run this sample:
 
 1. Replace the value of the `gradleEnterpriseServer` constant in [`index.html`][index] with your Gradle Enterprise base url.
-2. Open [`index.html`][index] in your favorite browser.
+2. If your Gradle Enterprise installation requires authentication, change `withCredentials` in [`index.html`][index] to `true`
+3. Open [`index.html`][index] in your favorite browser.
 
 Now start publishing builds to your Gradle Enterprise instance and watch the chart update in real-time.
 
