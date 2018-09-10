@@ -41,7 +41,7 @@
 
                 buildEventBus.bind('BuildFinished', (ignored, buildEventPayload) => {
                     const endTime = buildEventPayload.timestamp;
-                    const success = buildEventPayload.data.failure == null;
+                    const success = buildEventPayload.data.failure == null && buildEventPayload.data.failureId == null;
 
                     updateCharts(startTime, endTime, success);
                 });
