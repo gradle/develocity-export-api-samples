@@ -9,7 +9,7 @@ buildScan {
 // licenseAgreementUrl = 'https://gradle.com/terms-of-service'
 // licenseAgree = 'yes'
     tag 'SAMPLE'
-    link 'GitHub', 'https://github.com/gradle/gradle-build-scan-quickstart'
+    link 'GitHub', 'https://github.com/gradle/gradle-enterprise-export-api-samples'
 }
 
 repositories {
@@ -25,4 +25,4 @@ dependencies {
 sourceCompatibility = '1.8'
 targetCompatibility = '1.8'
 
-mainClassName = "com.gradle.cloudservices.enterprise.export.BuildCountByUser"
+mainClassName = "com.gradle.enterprise.export.BuildCountByUser"

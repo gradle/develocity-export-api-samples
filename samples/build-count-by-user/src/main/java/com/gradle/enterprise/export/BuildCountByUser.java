@@ -1,4 +1,4 @@
-package com.gradle.cloudservices.enterprise.export;
+package com.gradle.enterprise.export;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
