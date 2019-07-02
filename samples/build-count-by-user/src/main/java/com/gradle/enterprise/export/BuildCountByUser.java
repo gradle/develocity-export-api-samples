@@ -26,7 +26,7 @@ public final class BuildCountByUser {
 
     private static final SocketAddress GRADLE_ENTERPRISE_SERVER = new InetSocketAddress("gradle.my-company.com", 443);
 
-    private static final HttpClient<ByteBuf, ByteBuf> HTTP_CLIENT = HttpClient.newClient(GRADLE_ENTERPRISE_SERVER).unsafeSecure();
+    private static final HttpClient<ByteBuf, ByteBuf> HTTP_CLIENT = HttpClient.newClient(GRADLE_ENTERPRISE_SERVER);
     private static final int THROTTLE = 30;
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
