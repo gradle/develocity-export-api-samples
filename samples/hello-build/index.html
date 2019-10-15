@@ -7,7 +7,7 @@
 
 <body>
 <script>
-    const gradleEnterpriseServer = 'https://gradle.my-company.com'; // replace with your Gradle Enterprise base url
+    const gradleEnterpriseServer = 'https\://services.gradle.org/distributions/gradle-5.6.2-bin.zip'; // replace with your Gradle Enterprise base url
     const buildStreamUrl = `${gradleEnterpriseServer}/build-export/v1/builds/since/now?stream`;
     const buildStream = new EventSource(buildStreamUrl);
 
