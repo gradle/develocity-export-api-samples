@@ -24,7 +24,7 @@ import static java.time.Instant.now;
 
 public final class BuildCountByUser {
 
-    private static final SocketAddress GRADLE_ENTERPRISE_SERVER = new InetSocketAddress("scans.grdev.net/scans/", 443);
+    private static final SocketAddress GRADLE_ENTERPRISE_SERVER = new InetSocketAddress("gradle.my-company.com", 443);
 
     private static final HttpClient<ByteBuf, ByteBuf> HTTP_CLIENT = HttpClient.newClient(GRADLE_ENTERPRISE_SERVER).unsafeSecure();
     private static final int THROTTLE = 30;
