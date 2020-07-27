@@ -12,6 +12,7 @@ The following samples are included:
 - [Build duration logger][build-duration-logger] [JavaScript]
 - [Real-time streaming build duration chart][realtime-streaming-build-duration-chart] [JavaScript]
 - [Build count by user][build-count-by-user] [Java]
+- [Build metrics][build-metrics] [Kotlin]
 
 ## Usage
 
@@ -27,6 +28,7 @@ Visit the website to learn more about [Gradle Enterprise][gradle-enterprise].
 [hello-build]: samples/hello-build
 [build-duration-logger]: samples/build-duration-logger
 [build-count-by-user]: samples/build-count-by-user
+[build-metrics]: samples/build-metrics
 [realtime-streaming-build-duration-chart]: samples/realtime-streaming-build-duration-chart
 [manual]: https://docs.gradle.com/enterprise/export-api
 [gradle-enterprise]: https://gradle.com/enterprise
