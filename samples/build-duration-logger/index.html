@@ -8,7 +8,7 @@
 <body>
 <script>
     // The address of your Gradle Enterprise server
-    const GRADLE_ENTERPRISE_SERVER_URL = 'https://gradle.my-company.com'; 
+    const GRADLE_ENTERPRISE_SERVER_URL = 'https://gradle.my-company.com';
     
     // The point in time from which builds should be processed.
     // Values can be 'now', or a number of milliseconds since the UNIX epoch.
@@ -78,12 +78,19 @@
 
         start(startTime) {
             const buildStreamUrl = this.createBuildStreamUrl(startTime);
-            const buildStream = new EventSource(buildStreamUrl);
-
-            buildStream.onopen = event => console.log(`Build stream '${buildStreamUrl}' open`);
-            buildStream.onerror = event => console.error('Build stream error', event);
-            buildStream.addEventListener('Build', event => {
-                this.enqueue(JSON.parse(event.data));
+            const buildStream = createServerSideEventStream(buildStreamUrl, {
+                onopen: event => console.log(`Build stream '${buildStreamUrl}' open`),
+                onerror: event => console.error('Build stream error', event),
+                eventListeners: [
+                    {
+                      eventName: 'Build',
+                      eventHandler:event => { this.enqueue(JSON.parse(event.data)); }
+                    }
+                ],
+                retry: {
+                    interval: 6000,
+                    maxRetries: 30
+                }
             });
         }
 
@@ -139,46 +146,101 @@
         processBuild(build) {
             this.numBuildsInProcess++;
             const buildEventHandlers = this.createBuildEventHandlers(build);
-            const buildEventStream = new EventSource(this.createBuildEventStreamUrl(build.buildId));
-            let buildEventStreamOpen = true;
-
-            buildEventStream.addEventListener('BuildEvent', event => {
-                const buildEventPayload = JSON.parse(event.data);
-                const { eventType } = buildEventPayload.type;
-
-                if (this.allHandledEventTypes.has(eventType)) {
-                    buildEventHandlers[eventType].forEach(handler => handler[`on${eventType}`](buildEventPayload));
-                }
-            });
-
-            // there isn't an onclose event that we can listen to, but an error event does get triggered
-            // when the end of the stream is reached so use that as a rough proxy for the end of the stream
-            buildEventStream.onerror = event => {
-                if (buildEventStreamOpen) {
+            const buildEventStreamUrl = this.createBuildEventStreamUrl(build.buildId);
+            const buildStream = createServerSideEventStream(buildEventStreamUrl, {
+                onerror: event => {
+                    // there isn't an onclose event that we can listen to, but an error event does get triggered
+                    // when the end of the stream is reached so use that as a rough proxy for the end of the stream
                     this.finishedProcessingBuild();
 
                     // Call the 'complete()' method on any handler that has it.
                     if (buildEventHandlers.complete) {
                         buildEventHandlers.complete.forEach(handler => handler.complete());
                     }
+                },
+                eventListeners: [
+                    {
+                        eventName: 'BuildEvent',
+                        eventHandler:event => {
+                            const buildEventPayload = JSON.parse(event.data);
+                            const { eventType } = buildEventPayload.type;
 
-                    buildEventStream.close();
-                    buildEventStreamOpen = false;
-                }
-            }
+                            if (this.allHandledEventTypes.has(eventType)) {
+                                buildEventHandlers[eventType].forEach(handler => handler[`on${eventType}`](buildEventPayload));
+                            }
+                        }
+                    }
+                ],
+                // retry: {} BuildEvents can't be retried as we cannot differentiate between a completed build event stream and a failing one
+            });
         }
 
         finishedProcessingBuild() {
             this.numBuildsInProcess--;
             setTimeout(() => this.processPendingBuilds(), 0); // process the next set of pending builds, if any
         }
-    }; 
+    }
         
     new BuildProcessor(
       GRADLE_ENTERPRISE_SERVER_URL, 
       MAX_CONCURRENT_BUILDS_TO_PROCESS, 
       BUILD_EVENT_HANDLERS
     ).start(PROCESS_FROM);
+
+    function createServerSideEventStream(url, configuration) {
+        let stream;
+        let retries = 0;
+        const _onopen = configuration.onopen || noop;
+        const _onerror = configuration.onerror || noop;
+        const _configurationRetry = configuration.retry || { }
+        const _maxRetries = _configurationRetry.maxRetries || 0;
+        const _retryInterval = _configurationRetry.interval || 1000;
+
+        stream = createStream()
+
+        function createStream() {
+            stream = new EventSource(url /*, configuration.options*/);
+
+            stream.onopen = (event) => {
+                _onopen(event)
+            }
+
+            stream.onerror = (event) => {
+                stream.close(); // prevent browsers from automatically restarting the stream indefinitely
+                removeStreamEventListeners();
+                stream = null
+
+                _onerror(event)
+
+                if(_maxRetries > 0 && retries < _maxRetries) {
+                    // start the schedule to reconnect to the error until successful
+                    setTimeout(()=> {
+                        retries++
+                        console.log(`Restarting ${url} stream, retry #${retries}`);
+                        stream = createStream()
+                    }, _retryInterval)
+                }
+            }
+
+            addStreamEventListeners()
+
+            function addStreamEventListeners() {
+                configuration.eventListeners.forEach(eventListener => {
+                    stream.addEventListener(eventListener.eventName, eventListener.eventHandler)
+                })
+            }
+
+            function removeStreamEventListeners() {
+                configuration.eventListeners.forEach(eventListener => {
+                    stream.addEventListener(eventListener.eventName, eventListener.eventHandler)
+                })
+            }
+
+            return stream
+        }
+
+        function noop() {}
+    }
     
 </script>
 </body>
