@@ -2,6 +2,8 @@ const EventSourcePolyfill = require('eventsource');
 
 // The address of your Gradle Enterprise server
 const GRADLE_ENTERPRISE_SERVER_URL = process.argv.slice(2);
+
+// Authorization credentials
 const EXPORT_API_USER = process.env.EXPORT_API_USER;
 const EXPORT_API_PASSWORD = process.env.EXPORT_API_PASSWORD;
 const BASIC_AUTH_TOKEN = Buffer.from(`${EXPORT_API_USER}:${EXPORT_API_PASSWORD}`).toString('base64')
@@ -60,7 +62,6 @@ const BUILD_EVENT_HANDLERS = [BuildDurationEventsHandler, CacheableTaskCountHand
 
 
 // Code below is a generic utility for interacting with the Export API.
-
 class BuildProcessor {
     constructor(gradleEnterpriseServerUrl, maxConcurrentBuildsToProcess, eventHandlerClasses) {
         this.gradleEnterpriseServerUrl = gradleEnterpriseServerUrl;
@@ -180,6 +181,7 @@ class BuildProcessor {
     }
 }
 
+// Code below is a wrapper of EventSourcePolyfill to provide an oncomplete callback,  retry interval and max retries configuration
 function createServerSideEventStream(url, configuration) {
     const STATUS_COMPLETE = 204;
 
