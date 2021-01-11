@@ -1,7 +1,10 @@
 const EventSourcePolyfill = require('eventsource');
 
 // The address of your Gradle Enterprise server
-const GRADLE_ENTERPRISE_SERVER_URL = 'https://localhost:5050';
+const GRADLE_ENTERPRISE_SERVER_URL = process.argv.slice(2);
+const EXPORT_API_USER = process.env.EXPORT_API_USER;
+const EXPORT_API_PASSWORD = process.env.EXPORT_API_PASSWORD;
+const BASIC_AUTH_TOKEN = Buffer.from(`${EXPORT_API_USER}:${EXPORT_API_PASSWORD}`).toString('base64')
 
 // The point in time from which builds should be processed.
 // Values can be 'now', or a number of milliseconds since the UNIX epoch.
@@ -195,7 +198,7 @@ function createServerSideEventStream(url, configuration) {
     stream = createStream()
 
     function createStream() {
-        stream = new EventSourcePolyfill(url, { withCredentials: true });
+        stream = new EventSourcePolyfill(url, { headers: {'Authorization': `Basic ${BASIC_AUTH_TOKEN}`}});
 
         stream.reconnectInterval = _retryInterval;
 
