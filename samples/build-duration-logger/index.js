@@ -190,7 +190,7 @@ function createServerSideEventStream(url, configuration) {
     const _onerror = configuration.onerror || noop;
     const _oncomplete = configuration.oncomplete || noop;
     const _configurationRetry = configuration.retry || { }
-    const _maxRetries = _configurationRetry.maxRetries || 0;
+    const _maxRetries = _configurationRetry.maxRetries || 3;
     const _retryInterval = _configurationRetry.interval || 1000;
 
     stream = createStream()
