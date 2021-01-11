@@ -12,10 +12,11 @@ In this JavaScript example, build durations are calculated and written out to th
 
 To run this sample:
 
-1. Replace the value of the `gradleEnterpriseServer` constant in [`index.html`][index] with your Gradle Enterprise base url.
-2. Open [`index.html`][index] in your favorite browser.
-3. Open the JavaScript console.
+1. Install `node`
+2. Run `npm install` within this directory
+3. Replace the value of the `gradleEnterpriseServer` constant in [`index.js`][index] with your Gradle Enterprise base url.
+4. Run `npm start`
 
-Now start publishing builds to your Gradle Enterprise instance and watch their build durations get written to the JavaScript console.
+Now start publishing builds to your Gradle Enterprise instance and watch their build durations get written to the console.
 
-[index]: index.html
+[index]: index.js

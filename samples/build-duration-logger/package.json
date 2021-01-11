@@ -1,0 +1,13 @@
+{
+  "name": "build-duration-logger",
+  "description": "none",
+  "license": "NLPL",
+  "repository": {},
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "eventsource": "1.0.7"
+  }
+}
