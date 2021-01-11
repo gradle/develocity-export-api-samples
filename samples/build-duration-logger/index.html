@@ -211,9 +211,9 @@
             }
 
             stream.onerror = (event) => {
-                // the server will sent a 204 status when closing the stream if no more content is present but the
-                // EventSource implementation handles it as an error, we map here from the error to the oncomplete
-                // callback as an improved API
+                // The server will send a 204 status code when the stream has finished sending events.
+                // The browser default EventSource implementation handles this use case as an error.
+                // We therefore map this from the error to the oncomplete callback for improved usage
                 if(event.status === STATUS_COMPLETE) {
                     _oncomplete()
                     return
