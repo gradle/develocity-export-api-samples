@@ -219,8 +219,8 @@
                     return
                 }
 
-                // on errors (except STATUS_COMPLETE) EventSourcePolyfill will try to reconnect to the server until
-                // successfully unless we manually close it when _maxRetries is reached
+                // On all other errors, except the above handled complete event, the EventSourcePolyfill tries to reconnect
+                // to the server until it succeeds. To not do this indefinitely, we abort the reconnection loop if the specified _maxRetries limit is reached.
                 if(stream.readyState === EventSource.CONNECTING) {
                     if(_maxRetries > 0 && retries < _maxRetries) {
                         console.log(`Connecting to ${url}`);
