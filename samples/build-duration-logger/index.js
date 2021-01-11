@@ -33,7 +33,7 @@ class BuildDurationEventsHandler {
 
     onBuildFinished(eventPayload) {
         const endTime = eventPayload.timestamp;
-        console.log(`Build ${this.buildId} completed in ${endTime - this.startTime}ms`);
+        console.log(`Build ${GRADLE_ENTERPRISE_SERVER_URL}/s/${this.buildId} completed in ${endTime - this.startTime}ms`);
     }
 }
 
@@ -51,7 +51,7 @@ class CacheableTaskCountHandler {
     }
 
     complete() {
-        console.log(`Build ${this.buildId} had ${this.cacheableTaskCount} cacheable tasks`)
+        console.log(`Build ${GRADLE_ENTERPRISE_SERVER_URL}/s/${this.buildId} had ${this.cacheableTaskCount} cacheable tasks`)
     }
 }
 
@@ -147,8 +147,6 @@ class BuildProcessor {
 
         createServerSideEventStream(buildEventStreamUrl, {
             oncomplete:  () => {
-                // there isn't an onclose event that we can listen to, but an error event does get triggered
-                // when the end of the stream is reached so use that as a rough proxy for the end of the stream
                 this.finishedProcessingBuild();
 
                 // Call the 'complete()' method on any handler that has it.
@@ -220,7 +218,6 @@ function createServerSideEventStream(url, configuration) {
             // successfully unless we manually close it when _maxRetries is reached
             if(stream.readyState === EventSourcePolyfill.CONNECTING) {
                 if(_maxRetries > 0 && retries < _maxRetries) {
-                    console.log(`Connecting to ${url}`);
                     // on failed events we get two errors, one with a proper
                     // status and an undefined one, ignore the undefined to increase retry count correctly
                     if(event.status != null) retries++;

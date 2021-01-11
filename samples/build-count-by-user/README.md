@@ -4,8 +4,8 @@ In this Java example, builds from the last 24 hours are counted and aggregated b
 
 ## Concepts
 
-- Build streaming
-- Retrieving build events for a build
+- Build streaming.
+- Retrieving build events for a build.
 
 ## Setup
 

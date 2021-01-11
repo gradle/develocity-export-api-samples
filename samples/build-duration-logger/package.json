@@ -1,8 +1,12 @@
 {
   "name": "build-duration-logger",
-  "description": "none",
-  "license": "NLPL",
-  "repository": {},
+  "description": "Export API example fetching builds and build events to display build durations",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gradle/gradle-enterprise-export-api-samples.git",
+    "directoy": "samples/build-duration-logger"
+  },
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
