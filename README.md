@@ -8,9 +8,7 @@ This is a repository of samples that demonstrate how to use the [Gradle Enterpri
 
 The following samples are included:
 
-- [Hello build!][hello-build] [JavaScript]
 - [Build duration logger][build-duration-logger] [JavaScript]
-- [Real-time streaming build duration chart][realtime-streaming-build-duration-chart] [JavaScript]
 - [Build count by user][build-count-by-user] [Java]
 
 ## Usage

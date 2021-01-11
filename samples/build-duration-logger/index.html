@@ -150,8 +150,6 @@
             const buildEventStreamUrl = this.createBuildEventStreamUrl(build.buildId);
             const buildStream = createServerSideEventStream(buildEventStreamUrl, {
                 oncomplete:  () => {
-                    // there isn't an onclose event that we can listen to, but an error event does get triggered
-                    // when the end of the stream is reached so use that as a rough proxy for the end of the stream
                     this.finishedProcessingBuild();
 
                     // Call the 'complete()' method on any handler that has it.
@@ -185,6 +183,7 @@
         }
     }
 
+    // Code below enhances EventSourcePolyfill library with retry configuration and oncomplete callback
     function createServerSideEventStream(url, configuration) {
         const STATUS_COMPLETE = 204;
 
