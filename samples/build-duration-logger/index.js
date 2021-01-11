@@ -206,16 +206,16 @@ function createServerSideEventStream(url, configuration) {
         }
 
         stream.onerror = (event) => {
-            // the server will sent a 204 status when closing the stream if no more content is present but the
-            // EventSource implementation handles it as an error, we map here from the error to the oncomplete
-            // callback as an improved API
+            // The server will send a 204 status code when the stream has finished sending events.
+            // The browser default EventSource implementation handles this use case as an error.
+            // We therefore map this from the error to the oncomplete callback for improved usage
             if(event.status === STATUS_COMPLETE) {
                 _oncomplete()
                 return
             }
 
-            // on errors (except STATUS_COMPLETE) EventSourcePolyfill will try to reconnect to the server until
-            // successfully unless we manually close it when _maxRetries is reached
+            // On all other errors, except the above handled complete event, the EventSourcePolyfill tries to reconnect
+            // to the server until it succeeds. To not do this indefinitely, we abort the reconnection loop if the specified _maxRetries limit is reached.
             if(stream.readyState === EventSourcePolyfill.CONNECTING) {
                 if(_maxRetries > 0 && retries < _maxRetries) {
                     // on failed events we get two errors, one with a proper
