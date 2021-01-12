@@ -19,4 +19,4 @@ dependencies {
 sourceCompatibility = '1.8'
 targetCompatibility = '1.8'
 
-mainClassName = "com.gradle.enterprise.export.BuildCountByUser"
+mainClassName = "com.gradle.enterprise.export.ExportApiJavaExample"

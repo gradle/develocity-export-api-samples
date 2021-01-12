@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static java.time.Instant.now;
 
-public final class BuildCountByUser {
+public final class ExportApiJavaExample {
 
     private static final SocketAddress GRADLE_ENTERPRISE_SERVER = new InetSocketAddress("gradle.my-company.com", 443);
 
@@ -35,12 +35,12 @@ public final class BuildCountByUser {
 
         buildStream(since1Day)
             .doOnSubscribe(() -> System.out.println("Streaming builds..."))
-            .map(BuildCountByUser::parse)
+            .map(ExportApiJavaExample::parse)
             .map(json -> json.get("buildId").asText())
             .flatMap(buildId -> buildEventStream(buildId, ImmutableSet.of("BuildAgent"))
                 .doOnSubscribe(() -> System.out.println("Streaming events for : " + buildId))
                 .filter(serverSentEvent -> serverSentEvent.getEventTypeAsString().equals("BuildEvent"))
-                .map(BuildCountByUser::parse)
+                .map(ExportApiJavaExample::parse)
                 .single()
                 .map(json -> json.get("data").get("username").asText()),
                 THROTTLE

@@ -1,5 +1,5 @@
 {
-  "name": "build-duration-logger",
+  "name": "export-api-javascript-example",
   "description": "Export API example fetching builds and build events to display build durations",
   "license": "Apache-2.0",
   "repository": {

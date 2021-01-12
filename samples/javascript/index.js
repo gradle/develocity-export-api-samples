@@ -60,7 +60,6 @@ class CacheableTaskCountHandler {
 // The event handlers to use to process builds.
 const BUILD_EVENT_HANDLERS = [BuildDurationEventsHandler, CacheableTaskCountHandler];
 
-
 // Code below is a generic utility for interacting with the Export API.
 class BuildProcessor {
     constructor(gradleEnterpriseServerUrl, maxConcurrentBuildsToProcess, eventHandlerClasses) {
