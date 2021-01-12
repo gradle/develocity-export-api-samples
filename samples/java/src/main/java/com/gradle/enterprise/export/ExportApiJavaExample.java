@@ -28,7 +28,7 @@ public final class ExportApiJavaExample {
     private static final SocketAddress GRADLE_ENTERPRISE_SERVER = new InetSocketAddress("gradle.my-company.com", 443);
     private static final String EXPORT_API_USERNAME = "username";
     private static final String EXPORT_API_PASSWORD = "password";
-    private static final String EXPORT_API_CREDENTIALS = EXPORT_API_USERNAME + ":" + EXPORT_API_PASSWORD;
+    private static final String EXPORT_API_CREDENTIALS = Base64.getEncoder().encodeToString((EXPORT_API_USERNAME + ":" + EXPORT_API_PASSWORD).getBytes());
 
     private static final HttpClient<ByteBuf, ByteBuf> HTTP_CLIENT = HttpClient.newClient(GRADLE_ENTERPRISE_SERVER).unsafeSecure();
     private static final int THROTTLE = 30;
@@ -71,7 +71,7 @@ public final class ExportApiJavaExample {
 
         HttpClientRequest<ByteBuf, ByteBuf> request = HTTP_CLIENT
             .createGet(url)
-            .addHeader("Authorization", "Basic " + Base64.getEncoder().encodeToString(EXPORT_API_CREDENTIALS.getBytes()));
+            .addHeader("Authorization", "Basic " + EXPORT_API_CREDENTIALS);
 
         if (lastEventId != null) {
             request = request.addHeader("Last-Event-ID", lastEventId);
