@@ -1,11 +1,6 @@
-# Build count by user
+# Export API Java Example
 
 In this Java example, builds from the last 24 hours are counted and aggregated by username.
-
-## Concepts
-
-- Build streaming.
-- Retrieving build events for a build.
 
 ## Setup
 
@@ -28,4 +23,4 @@ Streaming events for : 2bbnxgrcq5uco
 Results: [user1: 80, user2: 64, build-agent1: 480, user3: 77, build-agent2: 598]
 ```
 
-[BuildCountByUser]: src/main/java/com/gradle/cloudservices/enterprise/export/BuildCountByUser.java
+[BuildCountByUser]: src/main/java/com/gradle/enterprise/export/BuildCountByUser.java
