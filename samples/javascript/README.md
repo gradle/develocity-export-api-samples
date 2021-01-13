@@ -9,7 +9,7 @@ To run this sample:
 1. Install [node.js].
 2. Run `npm install` within this directory.
 
-#### Create an Export API user for your Gradle Enterprise instance
+#### Authorisation
 3. Create a Gradle Enterprise user with the `Export API` role as described in the [Export API Access Control] documentation.
 4. Set two environment variables locally: `EXPORT_API_USER` `EXPORT_API_PASSWORD` to match the newly created Export API user credentials.
 

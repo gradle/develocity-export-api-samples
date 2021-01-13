@@ -187,19 +187,20 @@ function createServerSideEventStream(url, configuration) {
     let stream;
     let retries;
 
+    const noop = () => {}
     const _onopen = configuration.onopen || noop;
     const _onerror = configuration.onerror || noop;
     const _oncomplete = configuration.oncomplete || noop;
     const _configurationRetry = configuration.retry || { }
     const _maxRetries = _configurationRetry.maxRetries || 3;
-    const _retryInterval = _configurationRetry.interval || 1000;
+    const _reconnectInterval = _configurationRetry.interval || 1000;
 
     stream = createStream()
 
     function createStream() {
         stream = new EventSourcePolyfill(url, { headers: {'Authorization': `Basic ${BASIC_AUTH_TOKEN}`}});
 
-        stream.reconnectInterval = _retryInterval;
+        stream.reconnectInterval = _reconnectInterval;
 
         stream.onopen = (event) => {
             retries = 0;
@@ -209,7 +210,7 @@ function createServerSideEventStream(url, configuration) {
         stream.onerror = (event) => {
             // The server will send a 204 status code when the stream has finished sending events.
             // The browser default EventSource implementation handles this use case as an error.
-            // We therefore map this from the error to the oncomplete callback for improved usage
+            // We therefore map this from the error to the oncomplete callback for improved usage.
             if(event.status === STATUS_COMPLETE) {
                 _oncomplete()
                 return
@@ -222,7 +223,6 @@ function createServerSideEventStream(url, configuration) {
                     // on failed events we get two errors, one with a proper
                     // status and an undefined one, ignore the undefined to increase retry count correctly
                     if(event.status != null) retries++;
-
                 } else {
                     stream.close()
                     console.log(`Connecting to ${url} ERROR: max retries reached ${_maxRetries}`);
@@ -232,18 +232,12 @@ function createServerSideEventStream(url, configuration) {
             _onerror(event)
         }
 
-        addStreamEventListeners()
-
-        function addStreamEventListeners() {
-            configuration.eventListeners.forEach(eventListener => {
-                stream.addEventListener(eventListener.eventName, eventListener.eventHandler)
-            })
-        }
+        configuration.eventListeners.forEach(eventListener => {
+            stream.addEventListener(eventListener.eventName, eventListener.eventHandler)
+        })
 
         return stream
     }
-
-    function noop() {}
 }
 
 new BuildProcessor(
