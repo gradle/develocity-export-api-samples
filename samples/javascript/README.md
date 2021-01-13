@@ -14,7 +14,7 @@ To run this sample:
 4. Set two environment variables locally: `EXPORT_API_USER` `EXPORT_API_PASSWORD` to match the newly created Export API user credentials.
 
 #### Running
-5. Run `npm start {server-address}` replacing `{server-address}` with your Gradle Enterprise server URL.
+5. Run `npm start my-company.gradle.com` replacing `my-company.gradle.com` with your Gradle Enterprise server URL.
 
 Now start publishing builds to your Gradle Enterprise instance and watch their build durations get written to the console.
 
