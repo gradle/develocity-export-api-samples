@@ -8,10 +8,8 @@ This is a repository of samples that demonstrate how to use the [Gradle Enterpri
 
 The following samples are included:
 
-- [Hello build!][hello-build] [JavaScript]
-- [Build duration logger][build-duration-logger] [JavaScript]
-- [Real-time streaming build duration chart][realtime-streaming-build-duration-chart] [JavaScript]
-- [Build count by user][build-count-by-user] [Java]
+- [JavaScript]
+- [Java]
 
 ## Usage
 
@@ -21,12 +19,10 @@ Navigate to the `README.md` file in each sub directory in the [`samples`][sample
 
 Read the [Gradle Enterprise Export API manual][manual] to learn more about the export API.
 
-Visit the website to learn more about [Gradle Enterprise][gradle-enterprise].
+Visit the website to learn more about [Gradle Enterprise]
 
 [samples]: samples
-[hello-build]: samples/hello-build
-[build-duration-logger]: samples/build-duration-logger
-[build-count-by-user]: samples/build-count-by-user
-[realtime-streaming-build-duration-chart]: samples/realtime-streaming-build-duration-chart
+[JavaScript]: samples/javascript
+[Java]: samples/java
 [manual]: https://docs.gradle.com/enterprise/export-api
-[gradle-enterprise]: https://gradle.com/enterprise
+[Gradle Enterprise]: https://gradle.com

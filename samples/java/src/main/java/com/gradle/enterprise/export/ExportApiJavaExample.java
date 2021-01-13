@@ -17,14 +17,18 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Base64;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static java.time.Instant.now;
 
-public final class BuildCountByUser {
+public final class ExportApiJavaExample {
 
     private static final SocketAddress GRADLE_ENTERPRISE_SERVER = new InetSocketAddress("gradle.my-company.com", 443);
+    private static final String EXPORT_API_USERNAME = "username";
+    private static final String EXPORT_API_PASSWORD = "password";
+    private static final String EXPORT_API_CREDENTIALS = Base64.getEncoder().encodeToString((EXPORT_API_USERNAME + ":" + EXPORT_API_PASSWORD).getBytes());
 
     private static final HttpClient<ByteBuf, ByteBuf> HTTP_CLIENT = HttpClient.newClient(GRADLE_ENTERPRISE_SERVER).unsafeSecure();
     private static final int THROTTLE = 30;
@@ -35,12 +39,12 @@ public final class BuildCountByUser {
 
         buildStream(since1Day)
             .doOnSubscribe(() -> System.out.println("Streaming builds..."))
-            .map(BuildCountByUser::parse)
+            .map(ExportApiJavaExample::parse)
             .map(json -> json.get("buildId").asText())
             .flatMap(buildId -> buildEventStream(buildId, ImmutableSet.of("BuildAgent"))
                 .doOnSubscribe(() -> System.out.println("Streaming events for : " + buildId))
                 .filter(serverSentEvent -> serverSentEvent.getEventTypeAsString().equals("BuildEvent"))
-                .map(BuildCountByUser::parse)
+                .map(ExportApiJavaExample::parse)
                 .single()
                 .map(json -> json.get("data").get("username").asText()),
                 THROTTLE
@@ -66,7 +70,8 @@ public final class BuildCountByUser {
         AtomicReference<String> eventId = new AtomicReference<>();
 
         HttpClientRequest<ByteBuf, ByteBuf> request = HTTP_CLIENT
-            .createGet(url);
+            .createGet(url)
+            .addHeader("Authorization", "Basic " + EXPORT_API_CREDENTIALS);
 
         if (lastEventId != null) {
             request = request.addHeader("Last-Event-ID", lastEventId);
