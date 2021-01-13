@@ -10,7 +10,7 @@ const BASIC_AUTH_TOKEN = Buffer.from(`${EXPORT_API_USER}:${EXPORT_API_PASSWORD}`
 
 // The point in time from which builds should be processed.
 // Values can be 'now', or a number of milliseconds since the UNIX epoch.
-// The time is the point in time that the build was published to the server.
+// The time is the point in time when the build was published to the server.
 const PROCESS_FROM = 'now';
 
 // How many builds to process at one time.
@@ -24,7 +24,7 @@ const MAX_CONCURRENT_BUILDS_TO_PROCESS = 6;
 // Please see https://docs.gradle.com/enterprise/export-api for more information about the event types.
 //
 // After all events have been received, the "complete()" method will be called if it exists.
-class BuildDurationEventsHandler {
+class BuildDurationEventHandler {
     constructor(build) {
         this.buildId = build.buildId;
     }
@@ -58,7 +58,7 @@ class CacheableTaskCountHandler {
 }
 
 // The event handlers to use to process builds.
-const BUILD_EVENT_HANDLERS = [BuildDurationEventsHandler, CacheableTaskCountHandler];
+const BUILD_EVENT_HANDLERS = [BuildDurationEventHandler, CacheableTaskCountHandler];
 
 // Code below is a generic utility for interacting with the Export API.
 class BuildProcessor {
@@ -68,8 +68,9 @@ class BuildProcessor {
         this.allHandledEventTypes = this.getAllHandledEventTypes();
 
         this.pendingBuilds = [];
-        this.numBuildsInProcess = 0;
+        this.buildsInProcessCount = 0;
         this.maxConcurrentBuildsToProcess = maxConcurrentBuildsToProcess;
+        this.baseUrl = `${this.gradleEnterpriseServerUrl}/build-export/v1`
     }
 
     start(startTime) {
@@ -97,57 +98,58 @@ class BuildProcessor {
     }
 
     processPendingBuilds() {
-        if (this.pendingBuilds.length > 0 && this.numBuildsInProcess < this.maxConcurrentBuildsToProcess) {
+        if (this.pendingBuilds.length > 0 && this.buildsInProcessCount < this.maxConcurrentBuildsToProcess) {
             this.processBuild(this.pendingBuilds.shift());
         }
     }
 
     createBuildStreamUrl(startTime) {
-        return `${this.gradleEnterpriseServerUrl}/build-export/v1/builds/since/${startTime}?stream`;
+        return `${this.baseUrl}/builds/since/${startTime}?stream`;
     }
 
     // Inspect the methods on the handler class to find any event handlers that start with 'on' followed by the event type like 'onBuildStarted'.
     // Then take the part of the method name after the 'on' to get the event type.
-    getHandledEventTypesForHandlerClass(handlerClass) {
-        return Object.getOwnPropertyNames(handlerClass.prototype)
+    getHandledEventTypesForHandlerClass(eventHandlerClass) {
+        return Object.getOwnPropertyNames(eventHandlerClass.prototype)
             .filter(methodName => methodName.startsWith('on'))
             .map(methodName => methodName.substring(2));
     }
 
     getAllHandledEventTypes() {
-        return new Set(this.eventHandlerClasses.reduce((eventTypes, handlerClass) => eventTypes.concat(this.getHandledEventTypesForHandlerClass(handlerClass)), []));
+        return new Set(this.eventHandlerClasses.reduce((eventTypes, eventHandlerClass) => eventTypes.concat(this.getHandledEventTypesForHandlerClass(eventHandlerClass
+        )), []));
     }
 
     createBuildEventStreamUrl(buildId) {
         const types = [...this.allHandledEventTypes].join(',');
-        return `${this.gradleEnterpriseServerUrl}/build-export/v1/build/${buildId}/events?eventTypes=${types}`;
+        return `${this.baseUrl}/build/${buildId}/events?eventTypes=${types}`;
     }
 
     // Creates a map of event type -> handler instance for each event type supported by one or more handlers.
     createBuildEventHandlers(build) {
-        return this.eventHandlerClasses.reduce((handlers, handlerClass) => {
-            const addHandler = (type, handler) => handlers[type] ? handlers[type].push(handler) : handlers[type] = [handler];
+        return this.eventHandlerClasses.reduce((eventHandlers, eventHandlerClass) => {
+            const addHandler = (eventType, eventHandler) => eventHandlers[eventType] ? eventHandlers[eventType].push(eventHandler) : eventHandlers[eventType] = [eventHandler];
 
-            const handler = new handlerClass.prototype.constructor(build);
+            const eventHandler = new eventHandlerClass.prototype.constructor(build);
 
-            this.getHandledEventTypesForHandlerClass(handlerClass).forEach(eventType => addHandler(eventType, handler));
+            this.getHandledEventTypesForHandlerClass(eventHandlerClass).forEach(eventType => addHandler(eventType, eventHandler));
 
-            if (Object.getOwnPropertyNames(handlerClass.prototype).includes('complete')) {
-                addHandler('complete', handler);
+            if (Object.getOwnPropertyNames(eventHandlerClass.prototype).includes('complete')) {
+                addHandler('complete', eventHandler);
             }
 
-            return handlers;
+            return eventHandlers;
         }, {});
     }
 
     processBuild(build) {
-        this.numBuildsInProcess++;
+        this.buildsInProcessCount++;
         const buildEventHandlers = this.createBuildEventHandlers(build);
         const buildEventStreamUrl = this.createBuildEventStreamUrl(build.buildId);
 
         createServerSideEventStream(buildEventStreamUrl, {
             oncomplete:  () => {
-                this.finishedProcessingBuild();
+                this.finishProcessingBuild();
 
                 // Call the 'complete()' method on any handler that has it.
                 if (buildEventHandlers.complete) {
@@ -174,13 +176,13 @@ class BuildProcessor {
         });
     }
 
-    finishedProcessingBuild() {
-        this.numBuildsInProcess--;
+    finishProcessingBuild() {
+        this.buildsInProcessCount--;
         setTimeout(() => this.processPendingBuilds(), 0); // process the next set of pending builds, if any
     }
 }
 
-// Code below is a wrapper of EventSourcePolyfill to provide an oncomplete callback,  retry interval and max retries configuration
+// Code below is a wrapper of EventSourcePolyfill to provide an oncomplete callback, retry interval and max retries configuration.
 function createServerSideEventStream(url, configuration) {
     const STATUS_COMPLETE = 204;
 
