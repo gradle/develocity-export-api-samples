@@ -13,7 +13,7 @@ const EXPORT_API_ACCESS_KEY = process.env.EXPORT_API_ACCESS_KEY;
 const BEARER_TOKEN_AUTH_TOKEN = EXPORT_API_ACCESS_KEY != null ? Buffer.from(EXPORT_API_ACCESS_KEY).toString('base64') : undefined;
 
 if (BASIC_AUTH_TOKEN == null && BEARER_TOKEN_AUTH_TOKEN == null) {
-    throw new Error('Neither Basic nor Bearer token authorization seems to be configured, please set the required environment variables as explain in README.md. ');
+    throw new Error('Neither Basic nor Bearer token authorization seems to be configured, please set the required environment variables as explain in README.md.');
 }
 
 // The point in time from which builds should be processed.

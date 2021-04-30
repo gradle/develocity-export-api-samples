@@ -11,18 +11,23 @@ To run this sample:
 
 ### Authorisation
 
-#### Basic authentication (user / password)
-
-3. Create a Gradle Enterprise user with the `Export API` role as described in the [Export API Access Control] documentation.
-4. Set two environment variables locally: `EXPORT_API_USER` `EXPORT_API_PASSWORD` to match the newly created Export API user credentials.
+We recommend using the Bearer token authentication which has been available since Gradle Enterprise 2021.1.
 
 #### Bearer token authentication (access key)
 
-3. Create a Gradle Enterprise access key for a user with the `Export API` role as described in the [Export API Access Control] documentation.
-4. Set an environment variable locally: `EXPORT_API_ACCESS_KEY` to match the newly created Gradle Enterprise access key.
+1. Create a Gradle Enterprise access key for a user with the `Export API` role as described in the [Export API Access Control] documentation.
+2. Set an environment variable locally: `EXPORT_API_ACCESS_KEY` to match the newly created Gradle Enterprise access key.
+
+#### Basic authentication (user / password)
+
+Non-SAML users can authenticate via basic auth.
+
+1. Create a Gradle Enterprise user with the `Export API` role as described in the [Export API Access Control] documentation.
+2. Set two environment variables locally: `EXPORT_API_USER` `EXPORT_API_PASSWORD` to match the newly created Export API user credentials.
 
 ### Running
-5. Run `npm start my-company.gradle.com` replacing `my-company.gradle.com` with your Gradle Enterprise server URL.
+
+Run `npm start my-company.gradle.com` replacing `my-company.gradle.com` with your Gradle Enterprise server URL.
 
 Now start publishing builds to your Gradle Enterprise instance and watch their build durations get written to the console.
 
