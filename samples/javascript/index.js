@@ -3,10 +3,18 @@ const EventSourcePolyfill = require('eventsource');
 // The address of your Gradle Enterprise server
 const GRADLE_ENTERPRISE_SERVER_URL = process.argv.slice(2);
 
-// Authorization credentials
+// Basic authorization credentials
 const EXPORT_API_USER = process.env.EXPORT_API_USER;
 const EXPORT_API_PASSWORD = process.env.EXPORT_API_PASSWORD;
-const BASIC_AUTH_TOKEN = Buffer.from(`${EXPORT_API_USER}:${EXPORT_API_PASSWORD}`).toString('base64')
+const BASIC_AUTH_TOKEN = EXPORT_API_USER != null && EXPORT_API_PASSWORD != null ?  Buffer.from(`${EXPORT_API_USER}:${EXPORT_API_PASSWORD}`).toString('base64') : undefined;
+
+// Bearer token authorization credentials
+const EXPORT_API_ACCESS_KEY = process.env.EXPORT_API_ACCESS_KEY;
+const BEARER_TOKEN_AUTH_TOKEN = EXPORT_API_ACCESS_KEY != null ? Buffer.from(EXPORT_API_ACCESS_KEY).toString('base64') : undefined;
+
+if (BASIC_AUTH_TOKEN == null && BEARER_TOKEN_AUTH_TOKEN == null) {
+    throw new Error('Neither Basic nor Bearer token authorization seems to be configured, please set the required environment variables as explain in README.md. ');
+}
 
 // The point in time from which builds should be processed.
 // Values can be 'now', or a number of milliseconds since the UNIX epoch.
@@ -200,7 +208,9 @@ function createServerSideEventStream(url, configuration) {
     stream = createStream()
 
     function createStream() {
-        stream = new EventSourcePolyfill(url, { headers: {'Authorization': `Basic ${BASIC_AUTH_TOKEN}`}});
+        const authorizationHeader = BASIC_AUTH_TOKEN != null ? `Basic ${BASIC_AUTH_TOKEN}` : `Bearer ${BEARER_TOKEN_AUTH_TOKEN}`;
+
+        stream = new EventSourcePolyfill(url, { headers: {'Authorization': authorizationHeader}});
 
         stream.reconnectInterval = _reconnectInterval;
 

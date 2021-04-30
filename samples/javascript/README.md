@@ -9,16 +9,24 @@ To run this sample:
 1. Install [node.js].
 2. Run `npm install` within this directory.
 
-#### Authorisation
+### Authorisation
+
+#### Basic authentication (user / password)
+
 3. Create a Gradle Enterprise user with the `Export API` role as described in the [Export API Access Control] documentation.
 4. Set two environment variables locally: `EXPORT_API_USER` `EXPORT_API_PASSWORD` to match the newly created Export API user credentials.
 
-#### Running
+#### Bearer token authentication (access key)
+
+3. Create a Gradle Enterprise access key for a user with the `Export API` role as described in the [Export API Access Control] documentation.
+4. Set an environment variable locally: `EXPORT_API_ACCESS_KEY` to match the newly created Gradle Enterprise access key.
+
+### Running
 5. Run `npm start my-company.gradle.com` replacing `my-company.gradle.com` with your Gradle Enterprise server URL.
 
 Now start publishing builds to your Gradle Enterprise instance and watch their build durations get written to the console.
 
-#### Integrate the sample in an HTML page
+### Integrate the sample in an HTML page
 
 If using the script in an HTML page instead of a Node application, remove the first line of [index.js]:
 
