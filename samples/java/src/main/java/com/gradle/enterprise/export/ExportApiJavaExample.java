@@ -58,12 +58,12 @@ public final class ExportApiJavaExample {
     }
 
     private static Observable<ServerSentEvent> buildStream(Instant since) {
-        return resume("/build-export/v1/builds/since/" + String.valueOf(since.toEpochMilli()), null);
+        return resume("/build-export/v2/builds/since/" + String.valueOf(since.toEpochMilli()), null);
     }
 
 
     private static Observable<ServerSentEvent> buildEventStream(String buildId, Set<String> eventTypes) {
-        return resume("/build-export/v1/build/" + buildId + "/events?eventTypes=" + Joiner.on(",").join(eventTypes), null);
+        return resume("/build-export/v2/build/" + buildId + "/events?eventTypes=" + Joiner.on(",").join(eventTypes), null);
     }
 
     private static Observable<ServerSentEvent> resume(String url, String lastEventId) {
