@@ -2,6 +2,11 @@
 
 In this Java example, builds from the last 24 hours are counted and aggregated by username.
 
+## Minimum Gradle Enterprise version
+
+This sample uses version 2 of the Export API, available since Gradle Enterprise 2021.2.
+In order to use it with older Gradle Enterprise versions, please modify all occurrences of `/build-export/v2` to `/build-export/v1` in `ExportApiJavaExample.java`.
+
 ## Setup
 
 To run this sample:
