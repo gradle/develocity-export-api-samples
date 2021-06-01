@@ -3,6 +3,7 @@ package com.gradle.enterprise.export;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import io.netty.buffer.ByteBuf;
 import io.reactivex.netty.protocol.http.client.HttpClient;
@@ -18,6 +19,7 @@ import java.net.SocketAddress;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -29,7 +31,10 @@ public final class ExportApiJavaExample {
     private static final String EXPORT_API_USERNAME = "username";
     private static final String EXPORT_API_PASSWORD = "password";
     private static final String EXPORT_API_CREDENTIALS = Base64.getEncoder().encodeToString((EXPORT_API_USERNAME + ":" + EXPORT_API_PASSWORD).getBytes());
-
+    private static final Map<String, String> BUILD_AGENT_EVENT_BY_BUILD_TOOL = new ImmutableMap.Builder<String, String>()
+            .put("gradle", "BuildAgent")
+            .put("maven", "MvnBuildAgent")
+            .build();
     private static final HttpClient<ByteBuf, ByteBuf> HTTP_CLIENT = HttpClient.newClient(GRADLE_ENTERPRISE_SERVER).unsafeSecure();
     private static final int THROTTLE = 30;
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -40,14 +45,21 @@ public final class ExportApiJavaExample {
         buildStream(since1Day)
             .doOnSubscribe(() -> System.out.println("Streaming builds..."))
             .map(ExportApiJavaExample::parse)
-            .map(json -> json.get("buildId").asText())
-            .flatMap(buildId -> buildEventStream(buildId, ImmutableSet.of("BuildAgent"))
-                .doOnSubscribe(() -> System.out.println("Streaming events for : " + buildId))
-                .filter(serverSentEvent -> serverSentEvent.getEventTypeAsString().equals("BuildEvent"))
-                .map(ExportApiJavaExample::parse)
-                .single()
-                .map(json -> json.get("data").get("username").asText()),
-                THROTTLE
+            .filter(json -> {
+                JsonNode buildTool = json.get("toolType");
+                return buildTool == null || buildTool.asText().equals("gradle") || buildTool.asText().equals("maven");
+            })
+            .flatMap(json -> {
+                        String buildId = json.get("buildId").asText();
+                        String buildTool = json.get("toolType") != null ? json.get("toolType").asText() : "gradle";
+                        return buildEventStream(buildId, ImmutableSet.of(BUILD_AGENT_EVENT_BY_BUILD_TOOL.get(buildTool)))
+                                .doOnSubscribe(() -> System.out.println("Streaming events for : " + buildId))
+                                .filter(serverSentEvent -> serverSentEvent.getEventTypeAsString().equals("BuildEvent"))
+                                .map(ExportApiJavaExample::parse)
+                                .single()
+                                .map(eventJson -> eventJson.get("data").get("username").asText());
+                    },
+                    THROTTLE
             )
             .groupBy(username -> username)
             .flatMap(g -> g.count().map(i -> g.getKey() + ": " + i))
@@ -58,12 +70,12 @@ public final class ExportApiJavaExample {
     }
 
     private static Observable<ServerSentEvent> buildStream(Instant since) {
-        return resume("/build-export/v1/builds/since/" + String.valueOf(since.toEpochMilli()), null);
+        return resume("/build-export/v2/builds/since/" + String.valueOf(since.toEpochMilli()), null);
     }
 
 
     private static Observable<ServerSentEvent> buildEventStream(String buildId, Set<String> eventTypes) {
-        return resume("/build-export/v1/build/" + buildId + "/events?eventTypes=" + Joiner.on(",").join(eventTypes), null);
+        return resume("/build-export/v2/build/" + buildId + "/events?eventTypes=" + Joiner.on(",").join(eventTypes), null);
     }
 
     private static Observable<ServerSentEvent> resume(String url, String lastEventId) {

@@ -2,6 +2,18 @@
 
 In this JavaScript example, build durations are calculated and written out to the JavaScript console.
 
+## Minimum Gradle Enterprise version
+
+This sample uses version 2 of the Export API, available since Gradle Enterprise 2021.2.
+In order to use it with older Gradle Enterprise versions, please modify the following line in `index.js`:
+```
+this.baseUrl = `${this.gradleEnterpriseServerUrl}/build-export/v2`
+```
+must be changed to
+```
+this.baseUrl = `${this.gradleEnterpriseServerUrl}/build-export/v1`
+```
+
 ## Setup
 
 To run this sample:

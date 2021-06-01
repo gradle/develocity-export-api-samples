@@ -78,7 +78,7 @@ class BuildProcessor {
         this.pendingBuilds = [];
         this.buildsInProcessCount = 0;
         this.maxConcurrentBuildsToProcess = maxConcurrentBuildsToProcess;
-        this.baseUrl = `${this.gradleEnterpriseServerUrl}/build-export/v1`
+        this.baseUrl = `${this.gradleEnterpriseServerUrl}/build-export/v2`
     }
 
     start(startTime) {
