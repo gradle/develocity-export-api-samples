@@ -34,8 +34,10 @@ import static java.time.Instant.now;
 public final class ExportApiJavaExample {
 
     private static final HttpUrl GRADLE_ENTERPRISE_SERVER_URL = HttpUrl.parse("https://gradle.my-company.com");
-    private static final String EXPORT_API_USERNAME = "username";
-    private static final String EXPORT_API_PASSWORD = "password";
+    private static final String EXPORT_API_USERNAME = System.getenv("EXPORT_API_USER");
+    private static final String EXPORT_API_PASSWORD = System.getenv("EXPORT_API_PASWORD");
+    private static final String EXPORT_API_ACCESS_KEY = System.getenv("EXPORT_API_ACCESS_KEY");
+
     private static final Map<String, String> BUILD_AGENT_EVENT_BY_BUILD_TOOL = new ImmutableMap.Builder<String, String>()
             .put("gradle", "BuildAgent")
             .put("maven", "MvnBuildAgent")
@@ -51,7 +53,7 @@ public final class ExportApiJavaExample {
                 .readTimeout(Duration.ZERO)
                 .retryOnConnectionFailure(true)
                 .connectionPool(new ConnectionPool(MAX_BUILD_SCANS_STREAMED_CONCURRENTLY, 30, TimeUnit.SECONDS))
-                .authenticator(Authenticators.basic(EXPORT_API_USERNAME, EXPORT_API_PASSWORD))
+                .authenticator(Authenticators.bearerTokenOrBasic(EXPORT_API_ACCESS_KEY, EXPORT_API_USERNAME, EXPORT_API_PASSWORD))
                 .build();
         httpClient.dispatcher().setMaxRequests(MAX_BUILD_SCANS_STREAMED_CONCURRENTLY);
         httpClient.dispatcher().setMaxRequestsPerHost(MAX_BUILD_SCANS_STREAMED_CONCURRENTLY);
