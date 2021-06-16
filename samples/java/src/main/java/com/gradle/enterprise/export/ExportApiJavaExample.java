@@ -6,10 +6,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.MoreExecutors;
 import okhttp3.ConnectionPool;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
+import okhttp3.Protocol;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.sse.EventSource;
@@ -54,6 +56,7 @@ public final class ExportApiJavaExample {
                 .retryOnConnectionFailure(true)
                 .connectionPool(new ConnectionPool(MAX_BUILD_SCANS_STREAMED_CONCURRENTLY, 30, TimeUnit.SECONDS))
                 .authenticator(Authenticators.bearerTokenOrBasic(EXPORT_API_ACCESS_KEY, EXPORT_API_USERNAME, EXPORT_API_PASSWORD))
+                .protocols(ImmutableList.of(Protocol.HTTP_1_1))
                 .build();
         httpClient.dispatcher().setMaxRequests(MAX_BUILD_SCANS_STREAMED_CONCURRENTLY);
         httpClient.dispatcher().setMaxRequestsPerHost(MAX_BUILD_SCANS_STREAMED_CONCURRENTLY);
