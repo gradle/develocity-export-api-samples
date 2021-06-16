@@ -1,6 +1,6 @@
 # Export API Java Example
 
-This Java example, aggregates and counts builds from the last 24 hours by username.
+This Java example aggregates and counts builds from the last 24 hours by username.
 
 ## Minimum Gradle Enterprise version
 
