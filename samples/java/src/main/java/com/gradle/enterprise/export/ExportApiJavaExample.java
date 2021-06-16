@@ -84,14 +84,14 @@ public final class ExportApiJavaExample {
     }
 
     @NotNull
-    private static Request requestBuildScan(String buildId, String buildTool) {
+    private static Request requestBuildAgentBuildEvents(String buildTool, String buildId) {
         return new Request.Builder()
                 .url(GRADLE_ENTERPRISE_SERVER_URL.resolve("/build-export/v2/build/" + buildId + "/events?eventTypes=" + Joiner.on(",").join(ImmutableSet.of(BUILD_AGENT_EVENT_BY_BUILD_TOOL.get(buildTool)))))
                 .build();
     }
 
     private static class ExtractUsernamesFromBuilds extends PrintFailuresEventSourceListener {
-        private final List<CompletableFuture<String>> candiateUsernames = new ArrayList<>();
+        private final List<CompletableFuture<String>> candidateUsernames = new ArrayList<>();
         private final CompletableFuture<List<String>> usernames = new CompletableFuture<>();
         private final EventSource.Factory eventSourceFactory;
 
@@ -116,17 +116,17 @@ public final class ExportApiJavaExample {
                 final String buildId = json.get("buildId").asText();
                 final String buildTool = buildToolJson != null ? buildToolJson.asText() : "gradle";
 
-                Request request = requestBuildScan(buildId, buildTool);
+                Request request = requestBuildAgentBuildEvents(buildTool, buildId);
 
-                ExtractUsernameFromBuildScan listener = new ExtractUsernameFromBuildScan(buildId);
+                ExtractUsernameFromBuildEvents listener = new ExtractUsernameFromBuildEvents(buildId);
                 eventSourceFactory.newEventSource(request, listener);
-                candiateUsernames.add(listener.getUsername());
+                candidateUsernames.add(listener.getUsername());
             }
         }
 
         @Override
         public void onClosed(@NotNull EventSource eventSource) {
-            usernames.complete(candiateUsernames.stream()
+            usernames.complete(candidateUsernames.stream()
                     .map(u -> {
                         try {
                             return u.get();
@@ -140,11 +140,11 @@ public final class ExportApiJavaExample {
         }
     }
 
-    private static class ExtractUsernameFromBuildScan extends PrintFailuresEventSourceListener {
+    private static class ExtractUsernameFromBuildEvents extends PrintFailuresEventSourceListener {
         private final String buildId;
         private final CompletableFuture<String> username = new CompletableFuture<>();
 
-        private ExtractUsernameFromBuildScan(String buildId) {
+        private ExtractUsernameFromBuildEvents(String buildId) {
             this.buildId = buildId;
         }
 
