@@ -3,9 +3,6 @@ package com.gradle.enterprise.export;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.MoreExecutors;
 import okhttp3.ConnectionPool;
@@ -25,10 +22,10 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static java.time.Instant.now;
@@ -39,13 +36,31 @@ public final class ExportApiJavaExample {
     private static final String EXPORT_API_USERNAME = System.getenv("EXPORT_API_USER");
     private static final String EXPORT_API_PASSWORD = System.getenv("EXPORT_API_PASWORD");
     private static final String EXPORT_API_ACCESS_KEY = System.getenv("EXPORT_API_ACCESS_KEY");
-
-    private static final Map<String, String> BUILD_AGENT_EVENT_BY_BUILD_TOOL = new ImmutableMap.Builder<String, String>()
-            .put("gradle", "BuildAgent")
-            .put("maven", "MvnBuildAgent")
-            .build();
-    private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final int MAX_BUILD_SCANS_STREAMED_CONCURRENTLY = 30;
+
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+
+    private enum BuildTool {
+        GRADLE("BuildAgent", json -> json.get("data").get("username").asText()),
+        MAVEN("MvnBuildAgent", json -> json.get("data").get("username").asText())
+        ;
+
+        private final String buildAgentEvent;
+        private final Function<JsonNode, String> extractUsername;
+
+        BuildTool(String buildAgentEvent, Function<JsonNode, String> extractUsername) {
+            this.buildAgentEvent = buildAgentEvent;
+            this.extractUsername = extractUsername;
+        }
+
+        public String getBuildAgentEvent() {
+            return buildAgentEvent;
+        }
+
+        public Function<JsonNode, String> getExtractUsername() {
+            return extractUsername;
+        }
+    }
 
     public static void main(String[] args) throws Exception {
         Instant since1Day = now().minus(Duration.ofHours(24));
@@ -87,9 +102,9 @@ public final class ExportApiJavaExample {
     }
 
     @NotNull
-    private static Request requestBuildAgentBuildEvents(String buildTool, String buildId) {
+    private static Request requestBuildEvents(BuildTool buildTool, String buildId) {
         return new Request.Builder()
-                .url(GRADLE_ENTERPRISE_SERVER_URL.resolve("/build-export/v2/build/" + buildId + "/events?eventTypes=" + Joiner.on(",").join(ImmutableSet.of(BUILD_AGENT_EVENT_BY_BUILD_TOOL.get(buildTool)))))
+                .url(GRADLE_ENTERPRISE_SERVER_URL.resolve("/build-export/v2/build/" + buildId + "/events?eventTypes=" + buildTool.getBuildAgentEvent()))
                 .build();
     }
 
@@ -117,11 +132,11 @@ public final class ExportApiJavaExample {
             JsonNode buildToolJson = json.get("toolType");
             if (buildToolJson == null || buildToolJson.asText().equals("gradle") || buildToolJson.asText().equals("maven")) {
                 final String buildId = json.get("buildId").asText();
-                final String buildTool = buildToolJson != null ? buildToolJson.asText() : "gradle";
+                final BuildTool buildTool = BuildTool.valueOf(buildToolJson != null ? buildToolJson.asText().toUpperCase() : "GRADLE");
 
-                Request request = requestBuildAgentBuildEvents(buildTool, buildId);
+                Request request = requestBuildEvents(buildTool, buildId);
 
-                ExtractUsernameFromBuildEvents listener = new ExtractUsernameFromBuildEvents(buildId);
+                ExtractUsernameFromBuildEvents listener = new ExtractUsernameFromBuildEvents(buildTool, buildId);
                 eventSourceFactory.newEventSource(request, listener);
                 candidateUsernames.add(listener.getUsername());
             }
@@ -135,7 +150,7 @@ public final class ExportApiJavaExample {
                             return u.get();
                         } catch (InterruptedException | ExecutionException e) {
                             e.printStackTrace();
-                            return "Unknown";
+                            return "<unknown>";
                         }
                     })
                     .collect(Collectors.toList())
@@ -144,10 +159,12 @@ public final class ExportApiJavaExample {
     }
 
     private static class ExtractUsernameFromBuildEvents extends PrintFailuresEventSourceListener {
+        private final BuildTool buildTool;
         private final String buildId;
         private final CompletableFuture<String> username = new CompletableFuture<>();
 
-        private ExtractUsernameFromBuildEvents(String buildId) {
+        private ExtractUsernameFromBuildEvents(BuildTool buildTool, String buildId) {
+            this.buildTool = buildTool;
             this.buildId = buildId;
         }
 
@@ -164,14 +181,14 @@ public final class ExportApiJavaExample {
         public void onEvent(@NotNull EventSource eventSource, @Nullable String id, @Nullable String type, @NotNull String data) {
             if (type.equals("BuildEvent")) {
                 JsonNode eventJson = parse(data);
-                username.complete(eventJson.get("data").get("username").asText());
+                username.complete(buildTool.getExtractUsername().apply(eventJson));
             }
         }
 
         @Override
         public void onClosed(@NotNull EventSource eventSource) {
             // Complete only sets the value if it hasn't already been set
-            username.complete("Unknown");
+            username.complete("<unknown>");
         }
     }
 
