@@ -1,7 +1,5 @@
 # Gradle Enterprise Export API samples
 
-<img src="http://bit.ly/2JSSCT0" align="right" width="280" />
-
 This is a repository of samples that demonstrate how to use the [Gradle Enterprise Export API][manual].
 
 ## Samples
