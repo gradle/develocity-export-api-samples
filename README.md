@@ -24,3 +24,9 @@ Visit the website to learn more about [Gradle Enterprise]
 [Java]: samples/java
 [manual]: https://docs.gradle.com/enterprise/export-api
 [Gradle Enterprise]: https://gradle.com
+
+## License
+
+The Gradle Enterprise Export API samples project is open-source software released under the [Apache 2.0 License][apache-license].
+
+[apache-license]: https://www.apache.org/licenses/LICENSE-2.0.html
