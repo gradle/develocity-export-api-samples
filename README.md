@@ -17,7 +17,7 @@ Navigate to the `README.md` file in each sub directory in the [`samples`][sample
 
 Read the [Gradle Enterprise Export API manual][manual] to learn more about the export API.
 
-Visit the website to learn more about [Gradle Enterprise]
+Visit the website to learn more about [Gradle Enterprise].
 
 ## License
 
