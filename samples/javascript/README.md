@@ -39,7 +39,7 @@ Non-SAML users can authenticate via basic auth.
 
 ### Running
 
-Run `npm start my-company.gradle.com` replacing `my-company.gradle.com` with your Gradle Enterprise server URL.
+Run `npm start https://ge.my-company.com` replacing `ge.my-company.com` with your Gradle Enterprise server URL.
 
 Now start publishing builds to your Gradle Enterprise instance and watch their build durations get written to the console.
 
