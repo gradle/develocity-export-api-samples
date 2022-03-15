@@ -32,7 +32,7 @@ import static java.time.Instant.now;
 
 public final class ExportApiJavaExample {
 
-    private static final HttpUrl GRADLE_ENTERPRISE_SERVER_URL = HttpUrl.parse("https://gradle.my-company.com");
+    private static final HttpUrl GRADLE_ENTERPRISE_SERVER_URL = HttpUrl.parse("https://ge.example.com");
     private static final String EXPORT_API_USERNAME = System.getenv("EXPORT_API_USER");
     private static final String EXPORT_API_PASSWORD = System.getenv("EXPORT_API_PASWORD");
     private static final String EXPORT_API_ACCESS_KEY = System.getenv("EXPORT_API_ACCESS_KEY");
