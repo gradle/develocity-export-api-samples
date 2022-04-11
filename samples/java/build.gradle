@@ -7,6 +7,12 @@ repositories {
     mavenCentral()
 }
 
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(11)
+    }
+}
+
 dependencies {
     implementation(platform("com.squareup.okhttp3:okhttp-bom:4.9.3"))
     implementation("com.squareup.okhttp3:okhttp")
@@ -17,8 +23,5 @@ dependencies {
 
     implementation("com.google.guava:guava:31.1-jre")
 }
-
-sourceCompatibility = '1.8'
-targetCompatibility = '1.8'
 
 mainClassName = "com.gradle.enterprise.export.ExportApiJavaExample"
