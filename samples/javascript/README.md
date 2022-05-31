@@ -41,6 +41,10 @@ Non-SAML users can authenticate via basic auth.
 
 Run `npm start https://ge.example.com` replacing `ge.example.com` with your Gradle Enterprise server URL.
 
+Alternatively to setting environment variables, credentials can be passed to the Node process by running:
+
+``` EXPORT_API_ACCESS_KEY=<KEYVALUE> npm start https://ge.example.com ``` replacing `<KEYVALUE>` with the access key or instead using `EXPORT_API_USER` and `EXPORT_API_PASSWORD` in the case of Basic authentication.
+
 Now start publishing builds to your Gradle Enterprise instance and watch their build durations get written to the console.
 
 ### Integrate the sample in an HTML page
@@ -52,7 +56,7 @@ If using the script in an HTML page instead of a Node application, remove the fi
 And ensure the `EventSourcePolyfill` module is loaded in the page before running the example script by adding:
 
 ```
-<script type="text/javascript" src="https://unpkg.com/@heroku/eventsource@1.0.7/example/eventsource-polyfill.js"></script>
+<script type="text/javascript" src="https://unpkg.com/eventsource@2.0.2/example/eventsource-polyfill.js"></script>
 ```
 
 to the `<head>` of the HTML page. 
