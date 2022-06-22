@@ -1,0 +1,28 @@
+name: Run Gradle Build
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up JDK 8
+      uses: actions/setup-java@v3
+      with:
+        java-version: '8'
+        distribution: 'temurin'
+
+    - name: Switch working directory to gradle project
+      run: cd samples/java
+      
+    - name: Set up Gradle Build Action
+      uses: gradle/gradle-build-action@v2.2.1
+      with:
+        arguments: build
