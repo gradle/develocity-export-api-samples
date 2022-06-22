@@ -10,6 +10,9 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: samples/java
 
     steps:
     - uses: actions/checkout@v3
@@ -18,9 +21,6 @@ jobs:
       with:
         java-version: '8'
         distribution: 'temurin'
-
-    - name: Switch working directory to gradle project
-      run: cd samples/java
       
     - name: Set up Gradle Build Action
       uses: gradle/gradle-build-action@v2.2.1
