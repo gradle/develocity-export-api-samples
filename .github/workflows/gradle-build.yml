@@ -10,9 +10,6 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: samples/java
 
     steps:
     - uses: actions/checkout@v3
@@ -26,3 +23,4 @@ jobs:
       uses: gradle/gradle-build-action@v2.2.1
       with:
         arguments: build
+        build-root-directory: samples/java
