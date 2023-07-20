@@ -1,6 +1,6 @@
 plugins {
-    id 'java'
-    id 'application'
+    id("java")
+    id("application")
 }
 
 repositories {
@@ -18,8 +18,10 @@ dependencies {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(8)
+        languageVersion.set(JavaLanguageVersion.of(8))
     }
 }
 
-mainClassName = "com.gradle.enterprise.export.ExportApiJavaExample"
+application {
+    mainClass.set("com.gradle.enterprise.export.ExportApiJavaExample")
+}
