@@ -1,4 +1,4 @@
-package com.gradle.enterprise.export;
+package com.develocity.export;
 
 import com.google.common.base.Strings;
 import com.google.common.net.HttpHeaders;

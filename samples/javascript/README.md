@@ -39,11 +39,11 @@ Non-SAML users can authenticate via basic auth.
 
 ### Running
 
-Run `npm start https://ge.example.com` replacing `ge.example.com` with your Develocity server URL.
+Run `npm start https://develocity.example.com` replacing `develocity.example.com` with your Develocity server URL.
 
 Alternatively to setting environment variables, credentials can be passed to the Node process by running:
 
-``` EXPORT_API_ACCESS_KEY=<KEYVALUE> npm start https://ge.example.com ``` replacing `<KEYVALUE>` with the access key or instead using `EXPORT_API_USER` and `EXPORT_API_PASSWORD` in the case of Basic authentication.
+``` EXPORT_API_ACCESS_KEY=<KEYVALUE> npm start https://develocity.example.com ``` replacing `<KEYVALUE>` with the access key or instead using `EXPORT_API_USER` and `EXPORT_API_PASSWORD` in the case of Basic authentication.
 
 Now start publishing builds to your Develocity instance and watch their build durations get written to the console.
 

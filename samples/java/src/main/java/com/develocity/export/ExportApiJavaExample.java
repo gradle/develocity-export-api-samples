@@ -1,4 +1,4 @@
-package com.gradle.enterprise.export;
+package com.develocity.export;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
