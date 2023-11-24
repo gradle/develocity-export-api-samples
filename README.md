@@ -1,6 +1,6 @@
-# Gradle Enterprise Export API samples
+# Develocity Export API samples
 
-This is a repository of samples that demonstrate how to use the [Gradle Enterprise Export API][manual].
+This is a repository of samples that demonstrate how to use the [Develocity Export API][manual].
 
 ## Samples
 
@@ -15,17 +15,17 @@ Navigate to the `README.md` file in each sub directory in the [`samples`][sample
 
 ## Learn more
 
-Read the [Gradle Enterprise Export API manual][manual] to learn more about the export API.
+Read the [Develocity Export API manual][manual] to learn more about the export API.
 
-Visit the website to learn more about [Gradle Enterprise].
+Visit the website to learn more about [Develocity].
 
 ## License
 
-The Gradle Enterprise Export API samples project is open-source software released under the [Apache 2.0 License][apache-license].
+The Develocity Export API samples project is open-source software released under the [Apache 2.0 License][apache-license].
 
 [apache-license]: https://www.apache.org/licenses/LICENSE-2.0.html
 [samples]: samples
 [JavaScript]: samples/javascript
 [Java]: samples/java
 [manual]: https://docs.gradle.com/enterprise/export-api
-[Gradle Enterprise]: https://gradle.com
+[Develocity]: https://gradle.com

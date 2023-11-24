@@ -32,7 +32,7 @@ import static java.time.Instant.now;
 
 public final class ExportApiJavaExample {
 
-    private static final HttpUrl GRADLE_ENTERPRISE_SERVER_URL = HttpUrl.parse("https://ge.example.com");
+    private static final HttpUrl DEVELOCITY_SERVER_URL = HttpUrl.parse("https://develocity.example.com");
     private static final String EXPORT_API_USERNAME = System.getenv("EXPORT_API_USER");
     private static final String EXPORT_API_PASSWORD = System.getenv("EXPORT_API_PASSWORD");
     private static final String EXPORT_API_ACCESS_KEY = System.getenv("EXPORT_API_ACCESS_KEY");
@@ -97,14 +97,14 @@ public final class ExportApiJavaExample {
     @NotNull
     private static Request requestBuilds(Instant since1Day) {
         return new Request.Builder()
-                .url(GRADLE_ENTERPRISE_SERVER_URL.resolve("/build-export/v2/builds/since/" + since1Day.toEpochMilli()))
+                .url(DEVELOCITY_SERVER_URL.resolve("/build-export/v2/builds/since/" + since1Day.toEpochMilli()))
                 .build();
     }
 
     @NotNull
     private static Request requestBuildEvents(BuildTool buildTool, String buildId) {
         return new Request.Builder()
-                .url(GRADLE_ENTERPRISE_SERVER_URL.resolve("/build-export/v2/build/" + buildId + "/events?eventTypes=" + buildTool.getBuildAgentEvent()))
+                .url(DEVELOCITY_SERVER_URL.resolve("/build-export/v2/build/" + buildId + "/events?eventTypes=" + buildTool.getBuildAgentEvent()))
                 .build();
     }
 

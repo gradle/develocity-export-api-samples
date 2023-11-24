@@ -1,7 +1,7 @@
 const EventSourcePolyfill = require('eventsource');
 
-// The address of your Gradle Enterprise server
-const GRADLE_ENTERPRISE_SERVER_URL = process.argv.slice(2);
+// The address of your Develocity server
+const DEVELOCITY_SERVER_URL = process.argv.slice(2);
 
 // Basic authorization credentials
 const EXPORT_API_USER = process.env.EXPORT_API_USER;
@@ -43,7 +43,7 @@ class BuildDurationEventHandler {
 
     onBuildFinished(eventPayload) {
         const endTime = eventPayload.timestamp;
-        console.log(`Build ${GRADLE_ENTERPRISE_SERVER_URL}/s/${this.buildId} completed in ${endTime - this.startTime}ms`);
+        console.log(`Build ${DEVELOCITY_SERVER_URL}/s/${this.buildId} completed in ${endTime - this.startTime}ms`);
     }
 }
 
@@ -61,7 +61,7 @@ class CacheableTaskCountHandler {
     }
 
     complete() {
-        console.log(`Build ${GRADLE_ENTERPRISE_SERVER_URL}/s/${this.buildId} had ${this.cacheableTaskCount} cacheable tasks`)
+        console.log(`Build ${DEVELOCITY_SERVER_URL}/s/${this.buildId} had ${this.cacheableTaskCount} cacheable tasks`)
     }
 }
 
@@ -70,15 +70,15 @@ const BUILD_EVENT_HANDLERS = [BuildDurationEventHandler, CacheableTaskCountHandl
 
 // Code below is a generic utility for interacting with the Export API.
 class BuildProcessor {
-    constructor(gradleEnterpriseServerUrl, maxConcurrentBuildsToProcess, eventHandlerClasses) {
-        this.gradleEnterpriseServerUrl = gradleEnterpriseServerUrl;
+    constructor(develocityServerUrl, maxConcurrentBuildsToProcess, eventHandlerClasses) {
+        this.develocityServerUrl = develocityServerUrl;
         this.eventHandlerClasses = eventHandlerClasses;
         this.allHandledEventTypes = this.getAllHandledEventTypes();
 
         this.pendingBuilds = [];
         this.buildsInProcessCount = 0;
         this.maxConcurrentBuildsToProcess = maxConcurrentBuildsToProcess;
-        this.baseUrl = `${this.gradleEnterpriseServerUrl}/build-export/v2`
+        this.baseUrl = `${this.develocityServerUrl}/build-export/v2`
     }
 
     start(startTime) {
@@ -253,7 +253,7 @@ function createServerSideEventStream(url, configuration) {
 }
 
 new BuildProcessor(
-    GRADLE_ENTERPRISE_SERVER_URL,
+    DEVELOCITY_SERVER_URL,
     MAX_CONCURRENT_BUILDS_TO_PROCESS,
     BUILD_EVENT_HANDLERS
 ).start(PROCESS_FROM);

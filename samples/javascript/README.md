@@ -2,16 +2,16 @@
 
 In this JavaScript example, build durations are calculated and written out to the JavaScript console.
 
-## Minimum Gradle Enterprise version
+## Minimum Develocity version
 
-This sample uses version 2 of the Export API, available since Gradle Enterprise 2021.2.
-In order to use it with older Gradle Enterprise versions, please modify the following line in `index.js`:
+This sample uses version 2 of the Export API, available since Develocity 2021.2.
+In order to use it with older Develocity versions, please modify the following line in `index.js`:
 ```
-this.baseUrl = `${this.gradleEnterpriseServerUrl}/build-export/v2`
+this.baseUrl = `${this.develocityServerUrl}/build-export/v2`
 ```
 must be changed to
 ```
-this.baseUrl = `${this.gradleEnterpriseServerUrl}/build-export/v1`
+this.baseUrl = `${this.develocityServerUrl}/build-export/v1`
 ```
 
 ## Setup
@@ -23,29 +23,29 @@ To run this sample:
 
 ### Authorisation
 
-We recommend using the Bearer token authentication which has been available since Gradle Enterprise 2021.1.
+We recommend using the Bearer token authentication which has been available since Develocity 2021.1.
 
 #### Bearer token authentication (access key)
 
-1. Create a Gradle Enterprise access key for a user with the `Export API` role as described in the [Export API Access Control] documentation.
-2. Set an environment variable locally: `EXPORT_API_ACCESS_KEY` to match the newly created Gradle Enterprise access key.
+1. Create a Develocity access key for a user with the `Export API` role as described in the [Export API Access Control] documentation.
+2. Set an environment variable locally: `EXPORT_API_ACCESS_KEY` to match the newly created Develocity access key.
 
 #### Basic authentication (user / password)
 
 Non-SAML users can authenticate via basic auth.
 
-1. Create a Gradle Enterprise user with the `Export API` role as described in the [Export API Access Control] documentation.
+1. Create a Develocity user with the `Export API` role as described in the [Export API Access Control] documentation.
 2. Set two environment variables locally: `EXPORT_API_USER` `EXPORT_API_PASSWORD` to match the newly created Export API user credentials.
 
 ### Running
 
-Run `npm start https://ge.example.com` replacing `ge.example.com` with your Gradle Enterprise server URL.
+Run `npm start https://ge.example.com` replacing `ge.example.com` with your Develocity server URL.
 
 Alternatively to setting environment variables, credentials can be passed to the Node process by running:
 
 ``` EXPORT_API_ACCESS_KEY=<KEYVALUE> npm start https://ge.example.com ``` replacing `<KEYVALUE>` with the access key or instead using `EXPORT_API_USER` and `EXPORT_API_PASSWORD` in the case of Basic authentication.
 
-Now start publishing builds to your Gradle Enterprise instance and watch their build durations get written to the console.
+Now start publishing builds to your Develocity instance and watch their build durations get written to the console.
 
 ### Integrate the sample in an HTML page
 
