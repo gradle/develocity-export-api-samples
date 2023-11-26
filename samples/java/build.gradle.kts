@@ -23,5 +23,5 @@ java {
 }
 
 application {
-    mainClass.set("com.gradle.enterprise.export.ExportApiJavaExample")
+    mainClass.set("com.develocity.export.ExportApiJavaExample")
 }
