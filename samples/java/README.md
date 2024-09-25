@@ -44,5 +44,5 @@ Streaming events for : 2bbnxgrcq5uco
 Results: [user1: 80, user2: 64, build-agent1: 480, user3: 77, build-agent2: 598]
 ```
 
-[ExportApiJavaExample]: src/main/java/com/gradle/enterprise/export/ExportApiJavaExample.java
+[ExportApiJavaExample]: src/main/java/com/develocity/export/ExportApiJavaExample.java
 [Export API Access Control]: https://docs.gradle.com/enterprise/export-api/#access_control
