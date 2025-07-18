@@ -12,7 +12,7 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp")
     implementation("com.squareup.okhttp3:okhttp-sse")
     implementation(platform("com.fasterxml.jackson:jackson-bom:2.19.1"))
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.19.1")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.19.2")
     implementation("com.google.guava:guava:33.4.8-jre")
 }
 
